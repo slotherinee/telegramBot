@@ -26,6 +26,7 @@ bot.catch((err, ctx) => {
 
 bot.on(message('text'), async ctx => {
   if (allowedUsers.includes(ctx.chat.id.toString())) {
+    console.log(ctx.message.text)
     const loadingMessageToUser = await ctx.reply('Генерирую...')
 
     gpt(
