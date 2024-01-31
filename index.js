@@ -6,6 +6,9 @@ const { gpt } = require('gpti')
 if (!process.env.TELEGRAM_TOKEN)
   throw new Error('"BOT_TOKEN" env var is required!')
 
+const allowedChatId1 = process.env.ALLOWED_CHAT_ID1
+const allowedChatId2 = process.env.ALLOWED_CHAT_ID2
+const allowedUsers = [allowedChatId1, allowedChatId2]
 const telegramToken = process.env.TELEGRAM_TOKEN
 const bot = new Telegraf(telegramToken)
 
@@ -22,33 +25,37 @@ bot.catch((err, ctx) => {
 })
 
 bot.on(message('text'), async ctx => {
-  const loadingMessageToUser = await ctx.reply('Генерирую...')
+  if (allowedUsers.includes(ctx.chat.id.toString())) {
+    const loadingMessageToUser = await ctx.reply('Генерирую...')
 
-  gpt(
-    {
-      messages: [
-        {
-          role: 'user',
-          content: ctx.message.text,
-        },
-      ],
-      model: 'GPT-4',
-      markdown: false,
-    },
-    (err, data) => {
-      if (err !== null) {
-        console.log(err)
-      } else {
-        console.log(data)
-        ctx.telegram.editMessageText(
-          ctx.chat.id,
-          loadingMessageToUser.message_id,
-          undefined,
-          data.gpt
-        )
+    gpt(
+      {
+        messages: [
+          {
+            role: 'user',
+            content: ctx.message.text,
+          },
+        ],
+        model: 'GPT-4',
+        markdown: false,
+      },
+      (err, data) => {
+        if (err !== null) {
+          console.log(err)
+        } else {
+          console.log(data)
+          ctx.telegram.editMessageText(
+            ctx.chat.id,
+            loadingMessageToUser.message_id,
+            undefined,
+            data.gpt
+          )
+        }
       }
-    }
-  )
+    )
+  } else {
+    ctx.reply('У вас нет прав для использования этого бота!')
+  }
 })
 
 bot.launch()
