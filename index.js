@@ -8,12 +8,13 @@ if (!process.env.TELEGRAM_TOKEN)
 
 const allowedChatId1 = process.env.ALLOWED_CHAT_ID1
 const allowedChatId2 = process.env.ALLOWED_CHAT_ID2
-const allowedUsers = [allowedChatId1, allowedChatId2]
+const allowedChatId3 = process.env.ALLOWED_CHAT_ID3
+const allowedUsers = [allowedChatId1, allowedChatId2, allowedChatId3]
 const telegramToken = process.env.TELEGRAM_TOKEN
 const bot = new Telegraf(telegramToken)
 
 bot.start(ctx => {
-  ctx.reply('Привет, красотуля! 👋')
+  ctx.reply('Привет! 👋')
   ctx.reply('Напиши мне что-нибудь и я постараюсь помочь! 😊')
 })
 
