@@ -65,6 +65,8 @@ bot.on(message('text'), async ctx => {
       generateModel(ctx, loadingMessageToUser, modelsData[5])
     } else if (ctx.message.text.startsWith('/xlprodia')) {
       generateModel(ctx, loadingMessageToUser, modelsData[6])
+    } else if (ctx.message.text.startsWith('/xxlprodia')) {
+      generateModel(ctx, loadingMessageToUser, modelsData[7])
     } else {
       chatGPT(ctx, loadingMessageToUser)
     }

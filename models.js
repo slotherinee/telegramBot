@@ -68,6 +68,19 @@ const modelsData = [
       cfg_scale: 7,
     },
   },
+  {
+    name: '/xxlprodia',
+    modelFn: prodia.stablediffusion_xl,
+    optionalData: {
+      prompt_negative: '',
+      model: 'sd_xl_base_1.0.safetensors [be9edd61]',
+      sampling_method: 'DPM++ 2M Karras',
+      sampling_steps: 25,
+      width: 1024,
+      height: 1024,
+      cfg_scale: 7,
+    },
+  },
 ]
 
 module.exports = modelsData
