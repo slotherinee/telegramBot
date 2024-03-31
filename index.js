@@ -48,9 +48,12 @@ bot.on(message('text'), async ctx => {
     const loadingMessageToUser = await ctx.reply('Генерирую...')
 
     if (ctx.message.text.startsWith('/dalle')) {
-      // check if after '/dalle' is empty then reply with ('Нужно указать запрос')
       if (!ctx.message.text.replace('/dalle', '').trim()) {
         ctx.reply('Нужен текст после "/dalle", не оставляй запрос пустым. 😔 ')
+        await ctx.telegram.deleteMessage(
+          ctx.chat.id,
+          loadingMessageToUser.message_id
+        )
         return
       }
       dalle.v2(
