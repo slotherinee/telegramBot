@@ -11,7 +11,10 @@ const convertFromBase64ToImage = async (data, ctx, loadingMessageToUser) => {
   fs.writeFileSync(imagePath, imageBuffer)
 
   await sharp(imageBuffer, { density: 300 })
-    .resize(1024, 1024)
+    .resize(1024, 1024, {
+      kernel: sharp.kernel.lanczos3,
+      interpolator: sharp.interpolators.nohalo,
+    })
     .toFile(imagePath, { force: true })
 
   await ctx.replyWithPhoto({ source: imagePath })
