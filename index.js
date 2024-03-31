@@ -63,6 +63,10 @@ bot.on(message('text'), async ctx => {
                   .toFile(imagePath, { force: true })
 
                 await ctx.replyWithPhoto({ source: imagePath })
+                await ctx.telegram.deleteMessage(
+                  ctx.chat.id,
+                  loadingMessageToUser.message_id
+                )
                 fs.unlinkSync(imagePath)
               } else {
                 ctx.reply('Не удалось сгенерировать изображение! 😔')
