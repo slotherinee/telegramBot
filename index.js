@@ -48,9 +48,18 @@ bot.on(message('text'), async ctx => {
     const loadingMessageToUser = await ctx.reply('Генерирую...')
 
     if (ctx.message.text.startsWith('/dalle')) {
-      dalle.mini(
+      // check if after '/dalle' is empty then reply with ('Нужно указать запрос')
+      if (!ctx.message.text.replace('/dalle', '').trim()) {
+        ctx.reply('Нужен текст после "/dalle", не оставляй запрос пустым. 😔 ')
+        return
+      }
+      dalle.v2(
         {
           prompt: ctx.message.text.replace('/dalle', '').trim(),
+          data: {
+            gpu: false,
+            prompt_improvement: false,
+          },
         },
         async (err, data) => {
           if (err != null) {
