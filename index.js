@@ -12,10 +12,20 @@ if (!process.env.TELEGRAM_TOKEN)
 const telegramToken = process.env.TELEGRAM_TOKEN
 const bot = new Telegraf(telegramToken)
 
-const allowedChatId1 = process.env.ALLOWED_CHAT_ID1
-const allowedChatId2 = process.env.ALLOWED_CHAT_ID2
-const allowedChatId3 = process.env.ALLOWED_CHAT_ID3
-const allowedUsers = [allowedChatId1, allowedChatId2, allowedChatId3]
+const {
+  ALLOWED_CHAT_ID1,
+  ALLOWED_CHAT_ID2,
+  ALLOWED_CHAT_ID3,
+  ALLOWED_CHAT_ID4,
+} = process.env
+
+const allowedChatIds = (...ids) => [...ids]
+const allowedChats = allowedChatIds(
+  ALLOWED_CHAT_ID1,
+  ALLOWED_CHAT_ID2,
+  ALLOWED_CHAT_ID3,
+  ALLOWED_CHAT_ID4
+)
 
 bot.start(ctx => {
   ctx.reply('Привет! 👋')
@@ -33,12 +43,12 @@ bot.on(message('text'), async ctx => {
   if (!ctx.message.text) {
     ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
   }
-  if (allowedUsers.includes(ctx.chat.id.toString())) {
-    console.log(ctx.message.text)
+  if (allowedChats.includes(ctx.chat.id.toString())) {
+    console.log(ctx.message.from.first_name, ctx.message.text)
     const loadingMessageToUser = await ctx.reply('Генерирую...')
 
     if (ctx.message.text.startsWith('/dalle')) {
-      dalle.v1(
+      dalle.mini(
         {
           prompt: ctx.message.text.replace('/dalle', '').trim(),
         },
