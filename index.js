@@ -1,24 +1,28 @@
+const fs = require('fs')
+const path = require('path')
 require('dotenv').config()
 const { Telegraf } = require('telegraf')
 const { message } = require('telegraf/filters')
-const { gpt } = require('gpti')
+const { gpt, dalle } = require('gpti')
+const sharp = require('sharp')
 
 if (!process.env.TELEGRAM_TOKEN)
   throw new Error('"BOT_TOKEN" env var is required!')
+
+const telegramToken = process.env.TELEGRAM_TOKEN
+const bot = new Telegraf(telegramToken)
 
 const allowedChatId1 = process.env.ALLOWED_CHAT_ID1
 const allowedChatId2 = process.env.ALLOWED_CHAT_ID2
 const allowedChatId3 = process.env.ALLOWED_CHAT_ID3
 const allowedUsers = [allowedChatId1, allowedChatId2, allowedChatId3]
-const telegramToken = process.env.TELEGRAM_TOKEN
-const bot = new Telegraf(telegramToken)
 
 bot.start(ctx => {
   ctx.reply('Привет! 👋')
   ctx.reply('Напиши мне что-нибудь и я постараюсь помочь! 😊')
 })
 
-bot.on(message('sticker'), ctx => ctx.reply('Немного не понимаю стикеры! 🤏'))
+bot.on(message('sticker'), ctx => ctx.reply('I dont speak stickers! 🤏'))
 
 bot.catch((err, ctx) => {
   console.error('Ошибка:', err)
@@ -26,41 +30,83 @@ bot.catch((err, ctx) => {
 })
 
 bot.on(message('text'), async ctx => {
+  if (!ctx.message.text) {
+    ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
+  }
   if (allowedUsers.includes(ctx.chat.id.toString())) {
     console.log(ctx.message.text)
     const loadingMessageToUser = await ctx.reply('Генерирую...')
 
-    gpt(
-      {
-        messages: [
-          {
-            role: 'user',
-            content: ctx.message.text,
-          },
-        ],
-        model: 'GPT-4',
-        markdown: false,
-      },
-      (err, data) => {
-        if (err !== null) {
-          console.log(err)
-        } else {
-          console.log(data)
-          ctx.telegram.editMessageText(
-            ctx.chat.id,
-            loadingMessageToUser.message_id,
-            undefined,
-            data.gpt
-          )
+    if (ctx.message.text.startsWith('/dalle')) {
+      dalle.v1(
+        {
+          prompt: ctx.message.text.replace('/dalle', '').trim(),
+        },
+        async (err, data) => {
+          if (err != null) {
+            console.log(err)
+          } else {
+            try {
+              if (data && data.images) {
+                const imageBase64 = data.images[0]
+                const base64Image = imageBase64.replace(
+                  /^data:image\/jpeg;base64,/,
+                  ''
+                )
+                const imageBuffer = Buffer.from(base64Image, 'base64')
+                const imagePath = path.join(__dirname, 'temp.jpg')
+
+                fs.writeFileSync(imagePath, imageBuffer)
+
+                await sharp(imageBuffer, { density: 300 })
+                  .resize(1024, 1024)
+                  .toFile(imagePath, { force: true })
+
+                await ctx.replyWithPhoto({ source: imagePath })
+                fs.unlinkSync(imagePath)
+              } else {
+                ctx.reply('Не удалось сгенерировать изображение! 😔')
+              }
+            } catch (err) {
+              ctx.reply('Не удалось сгенерировать изображение! 😔')
+            }
+          }
         }
-      }
-    )
+      )
+    } else {
+      gpt(
+        {
+          messages: [
+            {
+              role: 'user',
+              content: ctx.message.text,
+            },
+          ],
+          model: 'GPT-4',
+          markdown: false,
+        },
+        (err, data) => {
+          if (err !== null) {
+            console.log(err)
+          } else {
+            console.log(data)
+            ctx.telegram.editMessageText(
+              ctx.chat.id,
+              loadingMessageToUser.message_id,
+              undefined,
+              data.gpt
+            )
+          }
+        }
+      )
+    }
   } else {
     ctx.reply('У вас нет прав для использования этого бота!')
   }
 })
 
 bot.launch()
+console.log('bot launched')
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
