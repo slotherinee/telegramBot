@@ -16,6 +16,7 @@ const {
   ALLOWED_CHAT_ID2,
   ALLOWED_CHAT_ID3,
   ALLOWED_CHAT_ID4,
+  ALLOWED_CHAT_ID5,
 } = process.env
 
 const allowedChatIds = (...ids) => [...ids]
@@ -23,7 +24,8 @@ const allowedChats = allowedChatIds(
   ALLOWED_CHAT_ID1,
   ALLOWED_CHAT_ID2,
   ALLOWED_CHAT_ID3,
-  ALLOWED_CHAT_ID4
+  ALLOWED_CHAT_ID4,
+  ALLOWED_CHAT_ID5
 )
 
 bot.start(ctx => {
