@@ -7,6 +7,7 @@ const {
   stablediffusion,
   pixart,
 } = require('gpti')
+const playground = require('./playground')
 
 const modelsData = [
   {
@@ -134,6 +135,16 @@ const modelsData = [
     name: '/mini',
     modelFn: dalle.mini,
     optionalData: null,
+  },
+  {
+    name: '/pg',
+    modelFn: playground,
+    optionalData: {
+      prompt_negative: '',
+      width: 1024,
+      height: 1024,
+      guidance_scale: 3,
+    },
   },
 ]
 

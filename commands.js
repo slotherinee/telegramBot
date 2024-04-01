@@ -14,6 +14,7 @@ const commands = [
   '/cyber',
   '/pixart',
   '/mini',
+  '/pg',
 ]
 
 const commandToModelData = commands.reduce((obj, command, index) => {
