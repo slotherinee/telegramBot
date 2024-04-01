@@ -5,6 +5,7 @@ const {
   pixelart,
   emi,
   stablediffusion,
+  pixart,
 } = require('gpti')
 
 const modelsData = [
@@ -102,6 +103,37 @@ const modelsData = [
       sampler: 'DPM++ 2M Karras',
       negative_prompt: '',
     },
+  },
+  {
+    name: '/cyber',
+    modelFn: prodia.v1,
+    optionalData: {
+      model: 'cyberrealistic_v33.safetensors [82b0d085]',
+      steps: 25,
+      cfg_scale: 7,
+      sampler: 'DPM++ 2M Karras',
+      negative_prompt: '',
+    },
+  },
+  {
+    name: '/pixart',
+    modelFn: pixart.a,
+    optionalData: {
+      prompt_negative: '',
+      sampler: '(No style)',
+      image_style: 'Anime',
+      width: 1024,
+      height: 1024,
+      dpm_guidance_scale: 4.5,
+      dpm_inference_steps: 14,
+      sa_guidance_scale: 3,
+      sa_inference_steps: 25,
+    },
+  },
+  {
+    name: '/mini',
+    modelFn: dalle.mini,
+    optionalData: null,
   },
 ]
 

@@ -14,9 +14,9 @@ const chatGPT = (ctx, loadingMessageToUser) => {
     },
     (err, data) => {
       if (err !== null) {
-        console.log(err)
+        ctx.reply('Не удалось сгенерировать текст! Попробуйте еще раз. 😔')
       } else {
-        console.log(data)
+        console.log(data.gpt)
         ctx.telegram.editMessageText(
           ctx.chat.id,
           loadingMessageToUser.message_id,

@@ -1,12 +1,13 @@
 const fs = require('fs')
 const path = require('path')
 const sharp = require('sharp')
+const { v4: uuidv4 } = require('uuid')
 
 const convertFromBase64ToImage = async (data, ctx, loadingMessageToUser) => {
   const imageBase64 = data.images[0]
   const base64Image = imageBase64.replace(/^data:image\/jpeg;base64,/, '')
   const imageBuffer = Buffer.from(base64Image, 'base64')
-  const imagePath = path.join(__dirname, 'temp.jpg')
+  const imagePath = path.join(__dirname, `${uuidv4()}.jpg`)
 
   fs.writeFileSync(imagePath, imageBuffer)
 
@@ -16,8 +17,7 @@ const convertFromBase64ToImage = async (data, ctx, loadingMessageToUser) => {
       interpolator: sharp.interpolators.nohalo,
     })
     .toFile(imagePath, { force: true })
-
-  await ctx.replyWithPhoto({ source: imagePath })
+  await ctx.replyWithPhoto({ source: imagePath }, { caption: data?.prompt })
   await ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
   fs.unlinkSync(imagePath)
 }

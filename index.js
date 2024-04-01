@@ -36,7 +36,7 @@ bot.start(ctx => {
   ctx.reply('Привет! 👋')
   ctx.reply('Напиши мне что-нибудь и я постараюсь помочь! 😊')
   ctx.reply(
-    'Или используй команды /dalle, /prodia, /render, /pixelart, /emi, /diffusion, /xlprodia, /xxlprodia, /real, /journey'
+    'Или используй команды /dalle, /prodia, /xlprodia, /xxlprodia, /render, /pixelart, /emi, /diffusion, /real, /journey, /cyber, /pixart, /mini'
   )
 })
 
