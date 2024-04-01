@@ -11,7 +11,7 @@ const generateModel = async (ctx, loadingMessageToUser, modelsData) => {
     )
     return
   }
-  modelsData.modelFn(
+  await modelsData.modelFn(
     {
       prompt: ctx.message.text.replace(modelsData.name, '').trim(),
       data: modelsData.optionalData,

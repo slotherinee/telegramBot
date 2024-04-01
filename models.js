@@ -81,6 +81,28 @@ const modelsData = [
       cfg_scale: 7,
     },
   },
+  {
+    name: '/real',
+    modelFn: prodia.v1,
+    optionalData: {
+      model: 'Realistic_Vision_V5.0.safetensors [614d1063]',
+      steps: 25,
+      cfg_scale: 7,
+      sampler: 'DPM++ 2M Karras',
+      negative_prompt: '',
+    },
+  },
+  {
+    name: '/journey',
+    modelFn: prodia.v1,
+    optionalData: {
+      model: 'openjourney_V4.ckpt [ca2f377f]',
+      steps: 25,
+      cfg_scale: 7,
+      sampler: 'DPM++ 2M Karras',
+      negative_prompt: '',
+    },
+  },
 ]
 
 module.exports = modelsData
