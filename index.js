@@ -81,6 +81,7 @@ bot.on("audio", async (ctx) => {
     };
     const transcript = await client.transcripts.create(config);
     await ctx.reply(transcript.text);
+    console.log(transcript.text);
     await ctx.telegram.deleteMessage(
       ctx.chat.id,
       loadingMessageToUser.message_id
@@ -89,7 +90,6 @@ bot.on("audio", async (ctx) => {
     console.log(err);
     ctx.reply("Произошла ошибка при обработке запроса. 😔");
   } finally {
-    // fs.unlinkSync(inputFileName);
     if (pathToFile) {
       fs.unlinkSync(pathToFile);
     }
@@ -133,6 +133,7 @@ bot.on("voice", async (ctx) => {
         ctx.reply("Произошла ошибка при обработке запроса. 😔");
       } else {
         ctx.reply(data.gpt);
+        console.log("голосовое сообщение", data.gpt);
         ctx.telegram.deleteMessage(
           ctx.chat.id,
           loadingMessageToUser.message_id
