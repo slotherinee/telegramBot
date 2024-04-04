@@ -1,6 +1,6 @@
 const {
   convertFromBase64ToImage,
-  getImageFromUrl,
+  convertFromBlobToImage,
 } = require("./convertFromBase64ToImage");
 
 const generateModel = async (ctx, loadingMessageToUser, modelsData) => {
@@ -27,14 +27,14 @@ const generateModel = async (ctx, loadingMessageToUser, modelsData) => {
         try {
           if (data.images) {
             await convertFromBase64ToImage(data, ctx, loadingMessageToUser);
-          } else if (Array.isArray(data) && data[0].startsWith("http")) {
-            getImageFromUrl(data[0], ctx, loadingMessageToUser);
+          } else if (data instanceof Blob) {
+            await convertFromBlobToImage(data, ctx, loadingMessageToUser);
           } else {
-            ctx.reply("Не удалось сгенерировать изображение");
+            ctx.reply("Не удалось сгенерировать изображение! 😔");
           }
         } catch (err) {
           console.log(err);
-          ctx.reply("Не удалось сгенерировать изображение");
+          ctx.reply("Не удалось сгенерировать изображение! 😔");
         }
       }
     }

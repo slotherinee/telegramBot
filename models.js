@@ -1,11 +1,26 @@
-const { dalle, prodia, emi, stablediffusion } = require("gpti");
-const { playground, mini, pixart, dreamshaper } = require("./replicatedModels");
+const { prodia, emi } = require("gpti");
+const {
+  render3d,
+  pixelart,
+  anima,
+  dalle,
+  playground,
+  diffusion,
+  pseudoJourney,
+} = require("./modelFn");
 
 const modelsData = [
   {
     name: "/dalle",
-    modelFn: dalle.v1,
-    optionalData: null,
+    modelFn: dalle,
+    optionalData: {
+      guidance_scale: 6,
+      negative_prompt:
+        "(deformed, distorted, disfigured:1.3), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation,",
+      num_inference_steps: 25,
+      height: 1024,
+      width: 1024,
+    },
   },
   {
     name: "/prodia",
@@ -25,10 +40,13 @@ const modelsData = [
   },
   {
     name: "/diffusion",
-    modelFn: stablediffusion.v2,
+    modelFn: diffusion,
     optionalData: {
       prompt_negative: "",
-      guidance_scale: 9,
+      guidance_scale: 7.5,
+      image_style: "Photographic",
+      height: 1024,
+      width: 1024,
     },
   },
   {
@@ -70,13 +88,14 @@ const modelsData = [
   },
   {
     name: "/journey",
-    modelFn: prodia.v1,
+    modelFn: pseudoJourney,
     optionalData: {
-      model: "openjourney_V4.ckpt [ca2f377f]",
-      steps: 25,
-      cfg_scale: 7,
-      sampler: "DPM++ 2M Karras",
+      guidance_scale: 7.5,
       negative_prompt: "",
+      sampler: "DPM++ 2M Karras",
+      steps: 25,
+      height: 1024,
+      width: 1024,
     },
   },
   {
@@ -91,67 +110,6 @@ const modelsData = [
     },
   },
   {
-    name: "/mini",
-    modelFn: mini,
-    optionalData: {
-      width: 1024,
-      height: 1024,
-      prompt: "",
-      num_outputs: 1,
-      guidance_scale: 7.5,
-      apply_watermark: true,
-      prompt_strength: 0.8,
-      num_inference_steps: 60,
-      disable_safety_checker: true,
-    },
-  },
-  {
-    name: "/pg",
-    modelFn: playground,
-    optionalData: {
-      width: 1024,
-      height: 1024,
-      prompt: "",
-      scheduler: "DPMSolver++",
-      num_outputs: 1,
-      guidance_scale: 3,
-      apply_watermark: true,
-      negative_prompt: "",
-      prompt_strength: 0.8,
-      num_inference_steps: 25,
-    },
-  },
-  {
-    name: "/pixart",
-    modelFn: pixart,
-    optionalData: {
-      style: "None",
-      width: 1024,
-      height: 1024,
-      prompt: "",
-      scheduler: "DPMSolverMultistep",
-      num_outputs: 1,
-      guidance_scale: 4.5,
-      num_inference_steps: 14,
-    },
-  },
-  {
-    name: "/dream",
-    modelFn: dreamshaper,
-    optionalData: {
-      width: 1024,
-      height: 1024,
-      prompt: "",
-      scheduler: "K_EULER",
-      num_outputs: 1,
-      guidance_scale: 2,
-      apply_watermark: true,
-      negative_prompt:
-        "ugly, deformed, noisy, blurry, low contrast, text, BadDream, 3d, cgi, render, fake, anime, open mouth, big forehead, long neck",
-      num_inference_steps: 7,
-    },
-  },
-  {
     name: "/anime",
     modelFn: prodia.v1,
     optionalData: {
@@ -160,6 +118,46 @@ const modelsData = [
       cfg_scale: 7,
       sampler: "DPM++ 2M Karras",
       negative_prompt: "",
+    },
+  },
+  {
+    name: "/render",
+    modelFn: render3d,
+    optionalData: {
+      prompt_negative: "",
+    },
+  },
+  {
+    name: "/pixelart",
+    modelFn: pixelart,
+    optionalData: {
+      negative_prompt: "3d render, realistic",
+      num_inference_steps: 8,
+      guidance_scale: 1.5,
+      height: 1024,
+      width: 1024,
+    },
+  },
+  {
+    name: "/anima",
+    modelFn: anima,
+    optionalData: {
+      negative_prompt:
+        "lowres, text, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
+      guidance_scale: 7,
+      num_inference_steps: 28,
+      width: 1024,
+      height: 1024,
+    },
+  },
+  {
+    name: "/pg",
+    modelFn: playground,
+    optionalData: {
+      guidance_scale: 3,
+      prompt_negative: "",
+      width: 1024,
+      height: 1024,
     },
   },
 ];
