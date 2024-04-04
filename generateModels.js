@@ -1,37 +1,44 @@
-const convertFromBase64ToImage = require('./convertFromBase64ToImage')
+const {
+  convertFromBase64ToImage,
+  getImageFromUrl,
+} = require("./convertFromBase64ToImage");
 
 const generateModel = async (ctx, loadingMessageToUser, modelsData) => {
-  if (!ctx.message.text.replace(modelsData.name, '').trim()) {
+  if (!ctx.message.text.replace(modelsData.name, "").trim()) {
     ctx.reply(
       `Нужен текст после ${modelsData.name}, не оставляй запрос пустым. 😔 `
-    )
+    );
     await ctx.telegram.deleteMessage(
       ctx.chat.id,
       loadingMessageToUser.message_id
-    )
-    return
+    );
+    return;
   }
   await modelsData.modelFn(
     {
-      prompt: ctx.message.text.replace(modelsData.name, '').trim(),
+      prompt: ctx.message.text.replace(modelsData.name, "").trim(),
       data: modelsData.optionalData,
     },
     async (err, data) => {
       if (err != null) {
-        ctx.reply('Не удалось сгенерировать изображение! 😔')
+        console.log(err);
+        ctx.reply("Не удалось сгенерировать изображение! 😔");
       } else {
         try {
-          if (data && data.images) {
-            convertFromBase64ToImage(data, ctx, loadingMessageToUser)
+          if (data.images) {
+            await convertFromBase64ToImage(data, ctx, loadingMessageToUser);
+          } else if (Array.isArray(data) && data[0].startsWith("http")) {
+            getImageFromUrl(data[0], ctx, loadingMessageToUser);
           } else {
-            ctx.reply('Не удалось сгенерировать изображение! 😔')
+            ctx.reply("Не удалось сгенерировать изображение");
           }
         } catch (err) {
-          ctx.reply('Не удалось сгенерировать изображение! 😔')
+          console.log(err);
+          ctx.reply("Не удалось сгенерировать изображение");
         }
       }
     }
-  )
-}
+  );
+};
 
-module.exports = generateModel
+module.exports = generateModel;
