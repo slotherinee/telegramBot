@@ -51,7 +51,7 @@ bot.start((ctx) => {
     "Также можешь отправить мне голосовое сообщение. Я попробую его понять и ответить на него 😉"
   );
   ctx.reply(
-    "Или используй команды /dalle, /prodia, /xlprodia, /xxlprodia, /emi, /diffusion, /real, /journey, /cyber, /mini"
+    "Или используй команды /dalle, /prodia, /xlprodia, /xxlprodia, /emi, /diffusion, /real, /journey, /cyber, /mini, /pixart, /dream, /anime"
   );
 });
 

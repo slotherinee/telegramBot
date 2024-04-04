@@ -1,5 +1,5 @@
 const { dalle, prodia, emi, stablediffusion } = require("gpti");
-const playground = require("./playground");
+const { playground, mini, pixart, dreamshaper } = require("./replicatedModels");
 
 const modelsData = [
   {
@@ -92,8 +92,18 @@ const modelsData = [
   },
   {
     name: "/mini",
-    modelFn: dalle.mini,
-    optionalData: null,
+    modelFn: mini,
+    optionalData: {
+      width: 1024,
+      height: 1024,
+      prompt: "",
+      num_outputs: 1,
+      guidance_scale: 7.5,
+      apply_watermark: true,
+      prompt_strength: 0.8,
+      num_inference_steps: 60,
+      disable_safety_checker: true,
+    },
   },
   {
     name: "/pg",
@@ -109,6 +119,47 @@ const modelsData = [
       negative_prompt: "",
       prompt_strength: 0.8,
       num_inference_steps: 25,
+    },
+  },
+  {
+    name: "/pixart",
+    modelFn: pixart,
+    optionalData: {
+      style: "None",
+      width: 1024,
+      height: 1024,
+      prompt: "",
+      scheduler: "DPMSolverMultistep",
+      num_outputs: 1,
+      guidance_scale: 4.5,
+      num_inference_steps: 14,
+    },
+  },
+  {
+    name: "/dream",
+    modelFn: dreamshaper,
+    optionalData: {
+      width: 1024,
+      height: 1024,
+      prompt: "",
+      scheduler: "K_EULER",
+      num_outputs: 1,
+      guidance_scale: 2,
+      apply_watermark: true,
+      negative_prompt:
+        "ugly, deformed, noisy, blurry, low contrast, text, BadDream, 3d, cgi, render, fake, anime, open mouth, big forehead, long neck",
+      num_inference_steps: 7,
+    },
+  },
+  {
+    name: "/anime",
+    modelFn: prodia.v1,
+    optionalData: {
+      model: "dreamlike-anime-1.0.safetensors [4520e090]",
+      steps: 25,
+      cfg_scale: 7,
+      sampler: "DPM++ 2M Karras",
+      negative_prompt: "",
     },
   },
 ];
