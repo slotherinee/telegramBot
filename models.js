@@ -1,22 +1,10 @@
-const {
-  dalle,
-  prodia,
-  render3d,
-  pixelart,
-  emi,
-  stablediffusion,
-  pixart,
-} = require('gpti')
-const playground = require('./playground')
+const { dalle, prodia, emi, stablediffusion } = require('gpti')
 
 const modelsData = [
   {
     name: '/dalle',
-    modelFn: dalle.v2,
-    optionalData: {
-      gpu: false,
-      prompt_improvement: false,
-    },
+    modelFn: dalle.v1,
+    optionalData: null,
   },
   {
     name: '/prodia',
@@ -30,31 +18,16 @@ const modelsData = [
     },
   },
   {
-    name: '/render',
-    modelFn: render3d,
-    optionalData: {
-      prompt_negative: '',
-    },
-  },
-  {
-    name: '/pixelart',
-    modelFn: pixelart,
-    optionalData: {
-      prompt_negative: '',
-    },
-  },
-  {
     name: '/emi',
     modelFn: emi,
     optionalData: null,
   },
   {
     name: '/diffusion',
-    modelFn: stablediffusion.xl,
+    modelFn: stablediffusion.v2,
     optionalData: {
       prompt_negative: '',
-      image_style: '(No style)',
-      guidance_scale: 7.5,
+      guidance_scale: 9,
     },
   },
   {
@@ -72,10 +45,10 @@ const modelsData = [
   },
   {
     name: '/xxlprodia',
-    modelFn: prodia.stablediffusion_xl,
+    modelFn: prodia.stablediffusion,
     optionalData: {
       prompt_negative: '',
-      model: 'sd_xl_base_1.0.safetensors [be9edd61]',
+      model: 'cyberrealistic_v33.safetensors [82b0d085]',
       sampling_method: 'DPM++ 2M Karras',
       sampling_steps: 25,
       width: 1024,
@@ -117,34 +90,9 @@ const modelsData = [
     },
   },
   {
-    name: '/pixart',
-    modelFn: pixart.a,
-    optionalData: {
-      prompt_negative: '',
-      sampler: '(No style)',
-      image_style: 'Anime',
-      width: 1024,
-      height: 1024,
-      dpm_guidance_scale: 4.5,
-      dpm_inference_steps: 14,
-      sa_guidance_scale: 3,
-      sa_inference_steps: 25,
-    },
-  },
-  {
     name: '/mini',
     modelFn: dalle.mini,
     optionalData: null,
-  },
-  {
-    name: '/pg',
-    modelFn: playground,
-    optionalData: {
-      prompt_negative: '',
-      width: 1024,
-      height: 1024,
-      guidance_scale: 3,
-    },
   },
 ]
 

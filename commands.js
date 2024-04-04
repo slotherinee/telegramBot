@@ -3,8 +3,6 @@ const modelsData = require('./models')
 const commands = [
   '/dalle',
   '/prodia',
-  '/render',
-  '/pixelart',
   '/emi',
   '/diffusion',
   '/xlprodia',
@@ -12,9 +10,7 @@ const commands = [
   '/real',
   '/journey',
   '/cyber',
-  '/pixart',
   '/mini',
-  '/pg',
 ]
 
 const commandToModelData = commands.reduce((obj, command, index) => {
