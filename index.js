@@ -1,4 +1,5 @@
 require('dotenv').config()
+const fs = require('fs')
 const { Telegraf } = require('telegraf')
 const { message } = require('telegraf/filters')
 const chatGPT = require('./chatGPT')
@@ -6,11 +7,9 @@ const generateModel = require('./generateModels')
 const commandToModelData = require('./commands')
 const { AssemblyAI } = require('assemblyai')
 const { v4: uuidv4 } = require('uuid')
-const fs = require('fs')
 const { gpt } = require('gpti')
-
-const { HfInference } = require('@huggingface/inference')
-const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
+const { handleMedia } = require('./utils')
+const { allowedChats } = require('./allowedChats')
 
 const client = new AssemblyAI({
   apiKey: process.env.ASSEMBLY_AI_API_KEY,
@@ -21,33 +20,6 @@ if (!process.env.TELEGRAM_TOKEN)
 
 const telegramToken = process.env.TELEGRAM_TOKEN
 const bot = new Telegraf(telegramToken)
-
-const {
-  ALLOWED_CHAT_ID1,
-  ALLOWED_CHAT_ID2,
-  ALLOWED_CHAT_ID3,
-  ALLOWED_CHAT_ID4,
-  ALLOWED_CHAT_ID5,
-  ALLOWED_CHAT_ID6,
-  ALLOWED_CHAT_ID7,
-  ALLOWED_CHAT_ID8,
-  ALLOWED_CHAT_ID9,
-  ALLOWED_CHAT_ID10,
-} = process.env
-
-const allowedChatIds = (...ids) => [...ids]
-const allowedChats = allowedChatIds(
-  ALLOWED_CHAT_ID1,
-  ALLOWED_CHAT_ID2,
-  ALLOWED_CHAT_ID3,
-  ALLOWED_CHAT_ID4,
-  ALLOWED_CHAT_ID5,
-  ALLOWED_CHAT_ID6,
-  ALLOWED_CHAT_ID7,
-  ALLOWED_CHAT_ID8,
-  ALLOWED_CHAT_ID9,
-  ALLOWED_CHAT_ID10
-)
 
 bot.start(ctx => {
   ctx.reply('Привет! 👋')
@@ -61,88 +33,23 @@ bot.start(ctx => {
 })
 
 bot.on(message('sticker'), async ctx => {
-  let inputFileName
   const loadingMessageToUser = await ctx.reply('Генерирую фото...')
-  try {
-    const photoFileId = ctx.message.sticker.file_id
-    const fileLink = await bot.telegram.getFileLink(photoFileId)
-    const response = await fetch(fileLink.href)
-    const photoData = await response.arrayBuffer()
-    const pathname = new URL(fileLink.href).pathname
-    const format = pathname.split('/').pop().split('.').pop()
-    inputFileName = `${uuidv4()}.${format}`
-    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
-    const generatedText = await main(inputFileName)
-    const randomCommandOfCommands =
-      Object.keys(commandToModelData)[
-        Math.floor(Math.random() * Object.keys(commandToModelData).length)
-      ]
-    const command = randomCommandOfCommands
-    generateModel(
-      ctx,
-      loadingMessageToUser,
-      commandToModelData[command],
-      generatedText
-    )
-  } catch (err) {
-    console.log(err)
-    ctx.reply('Произошла ошибка при обработке запроса. 😔')
-  } finally {
-    if (inputFileName) {
-      fs.unlinkSync(inputFileName)
-    }
-  }
+  await handleMedia(
+    ctx,
+    ctx.message.sticker.file_id,
+    loadingMessageToUser,
+    generateTextFromImage
+  )
 })
-
-bot.catch((err, ctx) => {
-  console.error('Ошибка:', err)
-  ctx.reply('Произошла ошибка при обработке запроса. 😔')
-})
-
-const main = async inputFileName => {
-  const classification = async () => {
-    const result = await hf.imageToText({
-      data: fs.readFileSync(inputFileName),
-      model: 'Salesforce/blip-image-captioning-large',
-    })
-    return result
-  }
-  const data = await classification()
-  return data['generated_text']
-}
 
 bot.on('photo', async ctx => {
-  let inputFileName
   const loadingMessageToUser = await ctx.reply('Генерирую фото...')
-  try {
-    const photoFileId = ctx.message.photo[0].file_id
-    const fileLink = await bot.telegram.getFileLink(photoFileId)
-    const response = await fetch(fileLink.href)
-    const photoData = await response.arrayBuffer()
-    const pathname = new URL(fileLink.href).pathname
-    const format = pathname.split('/').pop().split('.').pop()
-    inputFileName = `${uuidv4()}.${format}`
-    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
-    const generatedText = await main(inputFileName)
-    const randomCommandOfCommands =
-      Object.keys(commandToModelData)[
-        Math.floor(Math.random() * Object.keys(commandToModelData).length)
-      ]
-    const command = randomCommandOfCommands
-    generateModel(
-      ctx,
-      loadingMessageToUser,
-      commandToModelData[command],
-      generatedText
-    )
-  } catch (err) {
-    console.log(err)
-    ctx.reply('Произошла ошибка при обработке запроса. 😔')
-  } finally {
-    if (inputFileName) {
-      fs.unlinkSync(inputFileName)
-    }
-  }
+  await handleMedia(
+    ctx,
+    ctx.message.photo[0].file_id,
+    loadingMessageToUser,
+    generateTextFromImage
+  )
 })
 
 bot.on('audio', async ctx => {
@@ -183,19 +90,19 @@ bot.on('voice', async ctx => {
   const loadingMessageToUser = await ctx.reply(
     'Пытаюсь распознать сообщение...👂'
   )
-
   const fileId = ctx.message.voice.file_id
   const voiceLink = await bot.telegram.getFileLink(fileId)
   const response = await fetch(voiceLink.href)
   const voiceData = await response.arrayBuffer()
   const fileName = `${uuidv4()}.mp3`
   fs.writeFileSync(fileName, new Uint8Array(voiceData))
-  const gotVoiceMessage = await ctx.reply('Голосовое сообщение получено. 👍')
+  const gotVoiceMessage = await ctx.reply(
+    'Голосовое сообщение обрабатывается. 👍'
+  )
   const config = {
     audio_url: `./${fileName}`,
     language_code: 'ru',
   }
-
   const transcript = await client.transcripts.create(config)
   gpt(
     {
@@ -241,6 +148,11 @@ bot.on(message('text'), async ctx => {
   } else {
     ctx.reply('У вас нет прав для использования этого бота!')
   }
+})
+
+bot.catch((err, ctx) => {
+  console.error('Ошибка:', err)
+  ctx.reply('Произошла ошибка при обработке запроса. 😔')
 })
 
 bot.launch()

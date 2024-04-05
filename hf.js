@@ -3,18 +3,6 @@
 // const fs = require("fs");
 // const hf = new HfInference(process.env.HUGGING_FACE_TOKEN);
 
-// const main = async () => {
-//   const classification = async () => {
-//     const result = await hf.imageToText({
-//       data: fs.readFileSync("image.jpg"),
-//       model: "Salesforce/blip-image-captioning-large",
-//     });
-//     return result;
-//   };
-//   const data = await classification();
-//   return data["generated_text"];
-// };
-
 // // // const model = "ptx0/pseudo-journey-v2";
 
 // // // const main = async () => {
