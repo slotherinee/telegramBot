@@ -15,8 +15,7 @@ const modelsData = [
     modelFn: dalle,
     optionalData: {
       guidance_scale: 6,
-      negative_prompt:
-        "(deformed, distorted, disfigured:1.3), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation,",
+      negative_prompt: "",
       num_inference_steps: 25,
       height: 1024,
       width: 1024,

@@ -7,11 +7,14 @@ const generateImage = async (
   process
 ) => {
   try {
-    const result = await hf.textToImage({
-      inputs: prompt,
-      model: modelName,
-      parameters: optionalData,
-    });
+    const result = await hf.textToImage(
+      {
+        inputs: prompt,
+        model: modelName,
+        parameters: optionalData,
+      },
+      { use_cache: false }
+    );
     process(null, result);
   } catch (error) {
     process(error, null);
