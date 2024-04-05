@@ -8,7 +8,7 @@ const commandToModelData = require('./commands')
 const { AssemblyAI } = require('assemblyai')
 const { v4: uuidv4 } = require('uuid')
 const { gpt } = require('gpti')
-const { handleMedia } = require('./utils')
+const { generateTextFromImage } = require('./utils')
 const { allowedChats } = require('./allowedChats')
 
 const client = new AssemblyAI({
@@ -31,6 +31,43 @@ bot.start(ctx => {
     'Или используй команды /pg, /dalle, /prodia, /xlprodia, /xxlprodia, /emi, /diffusion, /real, /render /journey, /cyber, /pixelart, /anime, /anima'
   )
 })
+
+const handleMedia = async (
+  ctx,
+  fileId,
+  loadingMessage,
+  generateTextFromImage
+) => {
+  let inputFileName
+  try {
+    const fileLink = await bot.telegram.getFileLink(fileId)
+    const response = await fetch(fileLink.href)
+    const photoData = await response.arrayBuffer()
+    const pathname = new URL(fileLink.href).pathname
+    const format = pathname.split('/').pop().split('.').pop()
+    inputFileName = `${uuidv4()}.${format}`
+    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
+    const generatedText = await generateTextFromImage(inputFileName)
+    const randomCommandOfCommands =
+      Object.keys(commandToModelData)[
+        Math.floor(Math.random() * Object.keys(commandToModelData).length)
+      ]
+    const command = randomCommandOfCommands
+    generateModel(
+      ctx,
+      loadingMessage,
+      commandToModelData[command],
+      generatedText
+    )
+  } catch (error) {
+    console.log(error)
+    ctx.reply('Произошла ошибка при обработке запроса. 😔')
+  } finally {
+    if (inputFileName) {
+      fs.unlinkSync(inputFileName)
+    }
+  }
+}
 
 bot.on(message('sticker'), async ctx => {
   const loadingMessageToUser = await ctx.reply('Генерирую фото...')
