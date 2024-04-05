@@ -17,7 +17,18 @@ const convertFromBase64ToImage = async (data, ctx, loadingMessageToUser) => {
       interpolator: sharp.interpolators.nohalo,
     })
     .toFile(imagePath, { force: true })
-  await ctx.replyWithPhoto({ source: imagePath }, { caption: data?.prompt })
+  await ctx.replyWithPhoto(
+    { source: imagePath },
+    {
+      caption: ctx.message.text
+        ? ctx.message.text
+            .split(' ')
+            .slice(1)
+            .join(' ')
+            .replace(/^\/[^ ]+/, '')
+        : '',
+    }
+  )
   await ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
   fs.unlinkSync(imagePath)
 }
