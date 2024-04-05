@@ -58,7 +58,39 @@ bot.start(ctx => {
   )
 })
 
-bot.on(message('sticker'), ctx => ctx.reply('I dont speak stickers! 😔'))
+bot.on(message('sticker'), async ctx => {
+  let inputFileName
+  const loadingMessageToUser = await ctx.reply('Генерирую фото...')
+  try {
+    const photoFileId = ctx.message.sticker.file_id
+    const fileLink = await bot.telegram.getFileLink(photoFileId)
+    const response = await fetch(fileLink.href)
+    const photoData = await response.arrayBuffer()
+    const pathname = new URL(fileLink.href).pathname
+    const format = pathname.split('/').pop().split('.').pop()
+    inputFileName = `${uuidv4()}.${format}`
+    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
+    const generatedText = await main(inputFileName)
+    const randomCommandOfCommands =
+      Object.keys(commandToModelData)[
+        Math.floor(Math.random() * Object.keys(commandToModelData).length)
+      ]
+    const command = randomCommandOfCommands
+    generateModel(
+      ctx,
+      loadingMessageToUser,
+      commandToModelData[command],
+      generatedText
+    )
+  } catch (err) {
+    console.log(err)
+    ctx.reply('Произошла ошибка при обработке запроса. 😔')
+  } finally {
+    if (inputFileName) {
+      fs.unlinkSync(inputFileName)
+    }
+  }
+})
 
 bot.catch((err, ctx) => {
   console.error('Ошибка:', err)

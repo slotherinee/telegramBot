@@ -74,6 +74,32 @@ const generateModel = async (
         }
       }
     )
+  } else if (ctx.message.sticker) {
+    await modelsData.modelFn(
+      {
+        prompt: optionalPrompt || '',
+        data: modelsData.optionalData,
+      },
+      async (err, data) => {
+        if (err != null) {
+          console.log(err)
+          ctx.reply('Не удалось сгенерировать изображение! 😔')
+        } else {
+          try {
+            if (data.images) {
+              await convertFromBase64ToImage(data, ctx, loadingMessageToUser)
+            } else if (data instanceof Blob) {
+              await convertFromBlobToImage(data, ctx, loadingMessageToUser)
+            } else {
+              ctx.reply('Не удалось сгенерировать изображение! 😔')
+            }
+          } catch (err) {
+            console.log(err)
+            ctx.reply('Не удалось сгенерировать изображение! 😔')
+          }
+        }
+      }
+    )
   }
 }
 
