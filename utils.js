@@ -23,7 +23,8 @@ const handleMedia = async (
   ctx,
   fileId,
   loadingMessage,
-  generateTextFromImage
+  generateTextFromImage,
+  bot
 ) => {
   let inputFileName
   try {
