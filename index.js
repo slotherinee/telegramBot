@@ -9,6 +9,9 @@ const { v4: uuidv4 } = require('uuid')
 const fs = require('fs')
 const { gpt } = require('gpti')
 
+const { HfInference } = require('@huggingface/inference')
+const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
+
 const client = new AssemblyAI({
   apiKey: process.env.ASSEMBLY_AI_API_KEY,
 })
@@ -60,6 +63,52 @@ bot.on(message('sticker'), ctx => ctx.reply('I dont speak stickers! 😔'))
 bot.catch((err, ctx) => {
   console.error('Ошибка:', err)
   ctx.reply('Произошла ошибка при обработке запроса. 😔')
+})
+
+const main = async inputFileName => {
+  const classification = async () => {
+    const result = await hf.imageToText({
+      data: fs.readFileSync(inputFileName),
+      model: 'Salesforce/blip-image-captioning-large',
+    })
+    return result
+  }
+  const data = await classification()
+  return data['generated_text']
+}
+
+bot.on('photo', async ctx => {
+  let inputFileName
+  const loadingMessageToUser = await ctx.reply('Генерирую фото...')
+  try {
+    const photoFileId = ctx.message.photo[0].file_id
+    const fileLink = await bot.telegram.getFileLink(photoFileId)
+    const response = await fetch(fileLink.href)
+    const photoData = await response.arrayBuffer()
+    const pathname = new URL(fileLink.href).pathname
+    const format = pathname.split('/').pop().split('.').pop()
+    inputFileName = `${uuidv4()}.${format}`
+    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
+    const generatedText = await main(inputFileName)
+    const randomCommandOfCommands =
+      Object.keys(commandToModelData)[
+        Math.floor(Math.random() * Object.keys(commandToModelData).length)
+      ]
+    const command = randomCommandOfCommands
+    generateModel(
+      ctx,
+      loadingMessageToUser,
+      commandToModelData[command],
+      generatedText
+    )
+  } catch (err) {
+    console.log(err)
+    ctx.reply('Произошла ошибка при обработке запроса. 😔')
+  } finally {
+    if (inputFileName) {
+      fs.unlinkSync(inputFileName)
+    }
+  }
 })
 
 bot.on('audio', async ctx => {

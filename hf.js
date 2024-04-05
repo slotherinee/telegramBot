@@ -1,24 +1,19 @@
-// require("dotenv").config();
-// const { HfInference } = require("@huggingface/inference");
-// const fs = require("fs");
-// const hf = new HfInference(process.env.HUGGING_FACE_TOKEN);
+require("dotenv").config();
+const { HfInference } = require("@huggingface/inference");
+const fs = require("fs");
+const hf = new HfInference(process.env.HUGGING_FACE_TOKEN);
 
-// const main = async () => {
-//   const classification = async () => {
-//     const result = await hf.imageToImage({
-//       inputs: new Blob([fs.readFileSync("6.jpg")]),
-//       parameters: {
-//         prompt: "add plate full of food on the table",
-//       },
-//       model: "lllyasviel/sd-controlnet-depth",
-//     });
-//     return result;
-//   };
-//   const result = await classification();
-//   const buffer = Buffer.from(await result.arrayBuffer());
-//   fs.writeFileSync("image.jpg", buffer);
-//   console.log(buffer);
-// };
+const main = async () => {
+  const classification = async () => {
+    const result = await hf.imageToText({
+      data: fs.readFileSync("image.jpg"),
+      model: "Salesforce/blip-image-captioning-large",
+    });
+    return result;
+  };
+  const data = await classification();
+  return data["generated_text"];
+};
 
 // // const model = "ptx0/pseudo-journey-v2";
 
@@ -46,4 +41,4 @@
 // //   console.log(result, buffer);
 // // };
 
-// main();
+main();
