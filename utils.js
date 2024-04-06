@@ -19,44 +19,6 @@ const generateTextFromImage = async inputFileName => {
   return data['generated_text']
 }
 
-const handleMedia = async (
-  ctx,
-  fileId,
-  loadingMessage,
-  generateTextFromImage,
-  bot
-) => {
-  let inputFileName
-  try {
-    const fileLink = await bot.telegram.getFileLink(fileId)
-    const response = await fetch(fileLink.href)
-    const photoData = await response.arrayBuffer()
-    const pathname = new URL(fileLink.href).pathname
-    const format = pathname.split('/').pop().split('.').pop()
-    inputFileName = `${uuidv4()}.${format}`
-    fs.writeFileSync(inputFileName, new Uint8Array(photoData))
-    const generatedText = await generateTextFromImage(inputFileName)
-    const randomCommandOfCommands =
-      Object.keys(commandToModelData)[
-        Math.floor(Math.random() * Object.keys(commandToModelData).length)
-      ]
-    const command = randomCommandOfCommands
-    generateModel(
-      ctx,
-      loadingMessage,
-      commandToModelData[command],
-      generatedText
-    )
-  } catch (error) {
-    console.log(error)
-    ctx.reply('Произошла ошибка при обработке запроса. 😔')
-  } finally {
-    if (inputFileName) {
-      fs.unlinkSync(inputFileName)
-    }
-  }
-}
-
 const convertFromBase64ToImage = async (data, ctx, loadingMessageToUser) => {
   const imageBase64 = data.images[0]
   const base64Image = imageBase64.replace(/^data:image\/jpeg;base64,/, '')
@@ -113,6 +75,5 @@ module.exports = {
   convertFromBase64ToImage,
   convertFromBlobToImage,
   generateTextFromImage,
-  handleMedia,
   processModel,
 }

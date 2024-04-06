@@ -48,17 +48,30 @@ const handleMedia = async (
     inputFileName = `${uuidv4()}.${format}`
     fs.writeFileSync(inputFileName, new Uint8Array(photoData))
     const generatedText = await generateTextFromImage(inputFileName)
-    const randomCommandOfCommands =
-      Object.keys(commandToModelData)[
-        Math.floor(Math.random() * Object.keys(commandToModelData).length)
-      ]
-    const command = randomCommandOfCommands
-    generateModel(
-      ctx,
-      loadingMessage,
-      commandToModelData[command],
-      generatedText
-    )
+    const userCaption = ctx.message.caption
+    console.log('user caption', userCaption)
+    console.log('ai caption', generatedText)
+    if (userCaption) {
+      const command = userCaption.split(' ')[0]
+      if (command in commandToModelData) {
+        generateModel(
+          ctx,
+          loadingMessage,
+          commandToModelData[command],
+          `${generatedText} ${userCaption}`
+        )
+        return
+      } else {
+        generateModel(
+          ctx,
+          loadingMessage,
+          commandToModelData['/pg'],
+          `${generatedText} ${userCaption}`
+        )
+        return
+      }
+    }
+    generateModel(ctx, loadingMessage, commandToModelData['/pg'], generatedText)
   } catch (error) {
     console.log(error)
     ctx.reply('Произошла ошибка при обработке запроса. 😔')
