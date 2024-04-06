@@ -20,6 +20,16 @@ const generateModel = async (
     }
   }
   if (ctx.message.photo || ctx.message.sticker) {
+    if (!ctx.message.caption.replace(modelsData.name, '').trim()) {
+      ctx.reply(
+        `Нужен текст после ${modelsData.name}, не оставляй запрос пустым. 😔 `
+      )
+      await ctx.telegram.deleteMessage(
+        ctx.chat.id,
+        loadingMessageToUser.message_id
+      )
+      return
+    }
     await modelsData.modelFn(
       {
         prompt: optionalPrompt || '',
