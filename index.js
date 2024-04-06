@@ -71,7 +71,13 @@ const handleMedia = async (
         return
       }
     }
-    generateModel(ctx, loadingMessage, commandToModelData['/pg'], generatedText)
+    generateModel(
+      ctx,
+      loadingMessage,
+      commandToModelData['/pg'],
+      generatedText,
+      true
+    )
   } catch (error) {
     console.log(error)
     ctx.reply('Произошла ошибка при обработке запроса. 😔')

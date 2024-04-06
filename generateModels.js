@@ -4,7 +4,8 @@ const generateModel = async (
   ctx,
   loadingMessageToUser,
   modelsData,
-  optionalPrompt
+  optionalPrompt,
+  isEmptyText
 ) => {
   const modelFnCallback = async (err, data) => {
     if (err != null) {
@@ -20,7 +21,17 @@ const generateModel = async (
     }
   }
   if (ctx.message.photo || ctx.message.sticker) {
-    if (!ctx.message.caption.replace(modelsData.name, '').trim()) {
+    if (isEmptyText) {
+      await modelsData.modelFn(
+        {
+          prompt: optionalPrompt || '',
+          data: modelsData.optionalData,
+        },
+        modelFnCallback
+      )
+      return
+    }
+    if (!ctx.message?.caption?.replace(modelsData.name, '').trim()) {
       ctx.reply(
         `Нужен текст после ${modelsData.name}, не оставляй запрос пустым. 😔 `
       )
