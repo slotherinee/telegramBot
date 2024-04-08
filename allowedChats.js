@@ -11,6 +11,8 @@ const {
   ALLOWED_CHAT_ID8,
   ALLOWED_CHAT_ID9,
   ALLOWED_CHAT_ID10,
+  ALLOWED_CHAT_ID11,
+  ALLOWED_CHAT_ID12,
 } = process.env
 
 const allowedChatIds = (...ids) => [...ids]
@@ -24,7 +26,9 @@ const allowedChats = allowedChatIds(
   ALLOWED_CHAT_ID7,
   ALLOWED_CHAT_ID8,
   ALLOWED_CHAT_ID9,
-  ALLOWED_CHAT_ID10
+  ALLOWED_CHAT_ID10,
+  ALLOWED_CHAT_ID11,
+  ALLOWED_CHAT_ID12
 )
 
 module.exports = {
