@@ -2,7 +2,7 @@ require('dotenv').config()
 const fs = require('fs')
 const { Telegraf } = require('telegraf')
 const { message } = require('telegraf/filters')
-const chatGPT = require('./chatGPT')
+const { chatGPT, chatHistory } = require('./chatGPT')
 const generateModel = require('./generateModels')
 const commandToModelData = require('./commands')
 const { AssemblyAI } = require('assemblyai')
@@ -186,6 +186,11 @@ bot.on('voice', async ctx => {
       }
     }
   )
+})
+
+bot.command('clear', ctx => {
+  chatHistory[ctx.chat.id] = []
+  ctx.reply('Контекст очищен! 🧹')
 })
 
 bot.on(message('text'), async ctx => {
