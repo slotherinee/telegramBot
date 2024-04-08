@@ -14,7 +14,6 @@ const chatGPT = (ctx, loadingMessageToUser) => {
   }))
 
   messages.push({ role: 'user', content: userMessage })
-  console.log('messages', messages)
   gpt(
     {
       messages,
@@ -37,7 +36,6 @@ const chatGPT = (ctx, loadingMessageToUser) => {
           response,
           { parse_mode: 'HTML' }
         )
-        // update chat history with users message and bot response
         chatHistory[chatId].push({ role: 'user', content: userMessage })
         chatHistory[chatId].push({ role: 'assistant', content: response })
       }

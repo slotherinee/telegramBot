@@ -143,6 +143,15 @@ bot.on('audio', async ctx => {
 })
 
 bot.on('voice', async ctx => {
+  const chatId = ctx.chat.id
+  if (!chatHistory[chatId]) {
+    chatHistory[chatId] = []
+  }
+  const messages = chatHistory[chatId].map(({ role, content }) => ({
+    role,
+    content,
+  }))
+
   const loadingMessageToUser = await ctx.reply(
     'Пытаюсь распознать сообщение...👂'
   )
@@ -160,16 +169,11 @@ bot.on('voice', async ctx => {
     language_code: 'ru',
   }
   const transcript = await client.transcripts.create(config)
+  messages.push({ role: 'user', content: transcript.text })
+
   gpt(
     {
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Ты секретарь, который получает текст из голосового сообщения и выдаешь ответ на данное сообщение',
-        },
-        { role: 'user', content: transcript.text },
-      ],
+      messages,
       model: 'GPT-4',
       markdown: false,
     },
@@ -184,6 +188,8 @@ bot.on('voice', async ctx => {
         ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceMessage.message_id)
         fs.unlinkSync(fileName)
       }
+      chatHistory[chatId].push({ role: 'user', content: transcript.text })
+      chatHistory[chatId].push({ role: 'assistant', content: data.gpt })
     }
   )
 })
