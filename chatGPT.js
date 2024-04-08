@@ -24,18 +24,10 @@ const chatGPT = (ctx, loadingMessageToUser) => {
       if (err !== null) {
         ctx.reply('Не удалось сгенерировать ответ! Попробуйте еще раз. 😔')
       } else {
-        const response = data.gpt.replace(/```.*?\n[\s\S]*?```/g, match => {
-          const code = match.replace(/```.*?\n|\n```/g, '')
-          return '<pre><code>' + code + '</code></pre>'
-        })
-        console.log(data.gpt)
-        ctx.telegram.editMessageText(
-          ctx.chat.id,
-          loadingMessageToUser.message_id,
-          undefined,
-          response,
-          { parse_mode: 'HTML' }
-        )
+        const response = data.gpt
+        console.log(response)
+        ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
+        ctx.reply(response, { parse_mode: 'Markdown' })
         chatHistory[chatId].push({ role: 'user', content: userMessage })
         chatHistory[chatId].push({ role: 'assistant', content: response })
       }
