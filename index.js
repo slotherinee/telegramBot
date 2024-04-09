@@ -27,6 +27,11 @@ bot.start(ctx => {
   )
 })
 
+bot.command('clear', ctx => {
+  chatHistory[ctx.chat.id] = []
+  ctx.reply('Контекст очищен! 🧹')
+})
+
 bot.on(message('text'), async ctx => {
   if (!ctx.message.text) {
     ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
@@ -173,11 +178,6 @@ bot.on('voice', async ctx => {
     console.log(err)
     ctx.reply('Произошла ошибка при обработке голосового сообщения. 😔')
   }
-})
-
-bot.command('clear', ctx => {
-  chatHistory[ctx.chat.id] = []
-  ctx.reply('Контекст очищен! 🧹')
 })
 
 bot.catch((err, ctx) => {
