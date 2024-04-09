@@ -27,6 +27,24 @@ bot.start(ctx => {
   )
 })
 
+bot.on(message('text'), async ctx => {
+  if (!ctx.message.text) {
+    ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
+  }
+  if (allowedChats.includes(ctx.chat.id.toString())) {
+    console.log(ctx.message.from.first_name, ctx.message.text)
+    const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
+    const command = `${ctx.message.text.split(' ')[0]}`
+    if (command in commandToModelData) {
+      generateModel(ctx, loadingMessageToUser, commandToModelData[command])
+    } else {
+      chatGPT(ctx, loadingMessageToUser)
+    }
+  } else {
+    ctx.reply('У вас нет прав для использования этого бота!')
+  }
+})
+
 const handleMedia = async (
   ctx,
   fileId,
@@ -160,24 +178,6 @@ bot.on('voice', async ctx => {
 bot.command('clear', ctx => {
   chatHistory[ctx.chat.id] = []
   ctx.reply('Контекст очищен! 🧹')
-})
-
-bot.on(message('text'), async ctx => {
-  if (!ctx.message.text) {
-    ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
-  }
-  if (allowedChats.includes(ctx.chat.id.toString())) {
-    console.log(ctx.message.from.first_name, ctx.message.text)
-    const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
-    const command = `${ctx.message.text.split(' ')[0]}`
-    if (command in commandToModelData) {
-      generateModel(ctx, loadingMessageToUser, commandToModelData[command])
-    } else {
-      chatGPT(ctx, loadingMessageToUser)
-    }
-  } else {
-    ctx.reply('У вас нет прав для использования этого бота!')
-  }
 })
 
 bot.catch((err, ctx) => {
