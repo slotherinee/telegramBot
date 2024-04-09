@@ -5,15 +5,10 @@ const { message } = require('telegraf/filters')
 const { chatGPT, chatHistory } = require('./chatGPT')
 const generateModel = require('./generateModels')
 const commandToModelData = require('./commands')
-const { AssemblyAI } = require('assemblyai')
 const { v4: uuidv4 } = require('uuid')
 const { gpt } = require('gpti')
-const { generateTextFromImage } = require('./utils')
+const { generateTextFromImage, processVoiceMessage } = require('./utils')
 const { allowedChats } = require('./allowedChats')
-
-const client = new AssemblyAI({
-  apiKey: process.env.ASSEMBLY_AI_API_KEY,
-})
 
 if (!process.env.TELEGRAM_TOKEN)
   throw new Error('"BOT_TOKEN" env var is required!')
@@ -108,40 +103,6 @@ bot.on('photo', async ctx => {
   )
 })
 
-bot.on('audio', async ctx => {
-  let pathToFile
-  const loadingMessageToUser = await ctx.reply('Генерирую текст...')
-  try {
-    const audioFileId = ctx.message.audio.file_id
-    const fileLink = await bot.telegram.getFileLink(audioFileId)
-    const response = await fetch(fileLink.href)
-    const audioData = await response.arrayBuffer()
-    const pathname = new URL(fileLink.href).pathname
-    const format = pathname.split('/').pop().split('.').pop()
-    const inputFileName = `${uuidv4()}.${format}`
-    fs.writeFileSync(inputFileName, new Uint8Array(audioData))
-    pathToFile = `./${inputFileName}`
-    const config = {
-      audio_url: pathToFile,
-      language_code: 'ru',
-    }
-    const transcript = await client.transcripts.create(config)
-    await ctx.reply(transcript.text)
-    console.log(transcript.text)
-    await ctx.telegram.deleteMessage(
-      ctx.chat.id,
-      loadingMessageToUser.message_id
-    )
-  } catch (err) {
-    console.log(err)
-    ctx.reply('Произошла ошибка при обработке запроса. 😔')
-  } finally {
-    if (pathToFile) {
-      fs.unlinkSync(pathToFile)
-    }
-  }
-})
-
 bot.on('voice', async ctx => {
   const chatId = ctx.chat.id
   if (!chatHistory[chatId]) {
@@ -161,37 +122,39 @@ bot.on('voice', async ctx => {
   const voiceData = await response.arrayBuffer()
   const fileName = `${uuidv4()}.mp3`
   fs.writeFileSync(fileName, new Uint8Array(voiceData))
-  const gotVoiceMessage = await ctx.reply(
-    'Голосовое сообщение обрабатывается. 👍'
-  )
-  const config = {
-    audio_url: `./${fileName}`,
-    language_code: 'ru',
-  }
-  const transcript = await client.transcripts.create(config)
-  messages.push({ role: 'user', content: transcript.text })
-
-  gpt(
-    {
-      messages,
-      model: 'GPT-4',
-      markdown: false,
-    },
-    (err, data) => {
-      if (err) {
-        console.log(err)
-        ctx.reply('Произошла ошибка при обработке запроса. 😔')
-      } else {
-        ctx.reply(data.gpt)
-        console.log('голосовое сообщение', data.gpt)
-        ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
-        ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceMessage.message_id)
-        fs.unlinkSync(fileName)
+  try {
+    const voiceResponse = await processVoiceMessage(fileName)
+    console.log('voice response', voiceResponse)
+    const gotVoiceResponse = await ctx.reply('Генерирую ответ...🙂')
+    messages.push({ role: 'user', content: voiceResponse })
+    gpt(
+      {
+        messages,
+        model: 'GPT-4',
+        markdown: false,
+      },
+      (err, data) => {
+        if (err) {
+          console.log(err)
+          ctx.reply('Произошла ошибка при обработке запроса. 😔')
+        } else {
+          ctx.reply(data.gpt, { parse_mode: 'Markdown' })
+          console.log('голосовое сообщение', data.gpt)
+          ctx.telegram.deleteMessage(
+            ctx.chat.id,
+            loadingMessageToUser.message_id
+          )
+          ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id)
+          fs.unlinkSync(fileName)
+        }
+        chatHistory[chatId].push({ role: 'user', content: voiceResponse })
+        chatHistory[chatId].push({ role: 'assistant', content: data.gpt })
       }
-      chatHistory[chatId].push({ role: 'user', content: transcript.text })
-      chatHistory[chatId].push({ role: 'assistant', content: data.gpt })
-    }
-  )
+    )
+  } catch (err) {
+    console.log(err)
+    ctx.reply('Произошла ошибка при обработке голосового сообщения. 😔')
+  }
 })
 
 bot.command('clear', ctx => {

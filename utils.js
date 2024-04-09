@@ -73,9 +73,21 @@ const processModel = async (data, ctx, loadingMessageToUser) => {
   }
 }
 
+const processVoiceMessage = async fileName => {
+  const response = await hf.automaticSpeechRecognition(
+    {
+      model: 'openai/whisper-large-v3',
+      data: fs.readFileSync(fileName),
+    },
+    { use_cache: false }
+  )
+  return response.text
+}
+
 module.exports = {
   convertFromBase64ToImage,
   convertFromBlobToImage,
   generateTextFromImage,
   processModel,
+  processVoiceMessage,
 }
