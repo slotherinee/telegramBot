@@ -2,9 +2,10 @@ const { gpt } = require('gpti')
 
 const chatHistory = {}
 
-const chatGPT = (ctx, loadingMessageToUser) => {
+const chatGPT = (ctx, loadingMessageToUser, tesseractResponse) => {
   const chatId = ctx.chat.id
-  const userMessage = ctx.message.text
+  const userMessage = ctx.message.text || ctx.message.caption || ''
+
   if (!chatHistory[chatId]) {
     chatHistory[chatId] = []
   }
@@ -13,7 +14,11 @@ const chatGPT = (ctx, loadingMessageToUser) => {
     content,
   }))
 
-  messages.push({ role: 'user', content: userMessage })
+  const fullUserMessage = tesseractResponse
+    ? `${userMessage} ${tesseractResponse}`
+    : userMessage
+
+  messages.push({ role: 'user', content: fullUserMessage })
   gpt(
     {
       messages,
@@ -26,10 +31,16 @@ const chatGPT = (ctx, loadingMessageToUser) => {
       } else {
         const response = data.gpt
         console.log(response)
-        ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
+        if (loadingMessageToUser && 'message_id' in loadingMessageToUser) {
+          ctx.telegram.deleteMessage(
+            ctx.chat.id,
+            loadingMessageToUser.message_id
+          )
+        }
         ctx.reply(response, { parse_mode: 'Markdown' })
-        chatHistory[chatId].push({ role: 'user', content: userMessage })
+        chatHistory[chatId].push({ role: 'user', content: fullUserMessage })
         chatHistory[chatId].push({ role: 'assistant', content: response })
+        console.log(chatHistory)
       }
     }
   )

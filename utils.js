@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { createWorker } = require('tesseract.js')
 
 const { HfInference } = require('@huggingface/inference')
 const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
@@ -84,10 +85,33 @@ const processVoiceMessage = async fileName => {
   return response.text
 }
 
+let worker
+
+const initializeWorker = async () => {
+  worker = await createWorker(['eng', 'rus'])
+}
+
+initializeWorker()
+
+const processReadingFromImage = async file => {
+  let response
+  try {
+    const {
+      data: { text },
+    } = await worker.recognize(file)
+    response = text
+  } catch (error) {
+    console.error('Error occurred during image recognition:', error)
+    response = 'Error occurred during image recognition'
+  }
+  return response
+}
+
 module.exports = {
   convertFromBase64ToImage,
   convertFromBlobToImage,
   generateTextFromImage,
   processModel,
   processVoiceMessage,
+  processReadingFromImage,
 }

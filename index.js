@@ -7,7 +7,11 @@ const generateModel = require('./generateModels')
 const commandToModelData = require('./commands')
 const { v4: uuidv4 } = require('uuid')
 const { gpt } = require('gpti')
-const { generateTextFromImage, processVoiceMessage } = require('./utils')
+const {
+  generateTextFromImage,
+  processVoiceMessage,
+  processReadingFromImage,
+} = require('./utils')
 const { allowedChats } = require('./allowedChats')
 
 if (!process.env.TELEGRAM_TOKEN)
@@ -58,44 +62,42 @@ const handleMedia = async (
 ) => {
   let inputFileName
   try {
-    const fileLink = await bot.telegram.getFileLink(fileId)
+    const largestPhoto = ctx.message.photo.pop()
+    const fileLink = await bot.telegram.getFileLink(largestPhoto.file_id)
     const response = await fetch(fileLink.href)
     const photoData = await response.arrayBuffer()
     const pathname = new URL(fileLink.href).pathname
     const format = pathname.split('/').pop().split('.').pop()
     inputFileName = `${uuidv4()}.${format}`
     fs.writeFileSync(inputFileName, new Uint8Array(photoData))
-    const generatedText = await generateTextFromImage(inputFileName)
+
     const userCaption = ctx.message.caption
     console.log('user caption', userCaption)
-    console.log('ai caption', generatedText)
+
     if (userCaption) {
       const command = userCaption.split(' ')[0]
       if (command in commandToModelData) {
+        const generatedText = await generateTextFromImage(inputFileName)
+        console.log('ai caption', generatedText)
         generateModel(
           ctx,
           loadingMessage,
           commandToModelData[command],
           `${generatedText} ${userCaption}`
         )
-        return
       } else {
-        generateModel(
-          ctx,
-          loadingMessage,
-          commandToModelData['/pg'],
-          `${generatedText} ${userCaption}`
+        const tesseractResponse = await processReadingFromImage(
+          `${inputFileName}`
         )
-        return
+        chatGPT(ctx, loadingMessage, tesseractResponse)
       }
+    } else {
+      const tesseractResponse = await processReadingFromImage(
+        `${inputFileName}`
+      )
+
+      chatGPT(ctx, loadingMessage, tesseractResponse)
     }
-    generateModel(
-      ctx,
-      loadingMessage,
-      commandToModelData['/pg'],
-      generatedText,
-      true
-    )
   } catch (error) {
     console.log(error)
     ctx.reply('Произошла ошибка при обработке запроса. 😔')
@@ -117,7 +119,7 @@ bot.on(message('sticker'), async ctx => {
 })
 
 bot.on('photo', async ctx => {
-  const loadingMessageToUser = await ctx.reply('Генерирую фото...')
+  const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
   await handleMedia(
     ctx,
     ctx.message.photo[0].file_id,
