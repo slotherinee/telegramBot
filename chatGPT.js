@@ -40,7 +40,6 @@ const chatGPT = (ctx, loadingMessageToUser, tesseractResponse) => {
         ctx.reply(response, { parse_mode: 'Markdown' })
         chatHistory[chatId].push({ role: 'user', content: fullUserMessage })
         chatHistory[chatId].push({ role: 'assistant', content: response })
-        console.log(chatHistory)
       }
     }
   )
