@@ -1,50 +1,48 @@
-const { gpt } = require('gpti')
+const { gpt } = require('gpti');
+const ChatHistory = require('./mongodbModel');
 
-const chatHistory = {}
+const chatGPT = async (ctx, loadingMessageToUser, tesseractResponse) => {
+  const chatId = ctx.chat.id;
+  const userMessage = ctx.message.text || ctx.message.caption || '';
 
-const chatGPT = (ctx, loadingMessageToUser, tesseractResponse) => {
-  const chatId = ctx.chat.id
-  const userMessage = ctx.message.text || ctx.message.caption || ''
-
-  if (!chatHistory[chatId]) {
-    chatHistory[chatId] = []
+  let chat = await ChatHistory.findOne({ chatId });
+  if (!chat) {
+    chat = new ChatHistory({ chatId, messages: [] });
   }
-  const messages = chatHistory[chatId].map(({ role, content }) => ({
-    role,
-    content,
-  }))
 
   const fullUserMessage = tesseractResponse
     ? `${userMessage} ${tesseractResponse}`
-    : userMessage
+    : userMessage;
 
-  messages.push({ role: 'user', content: fullUserMessage })
+  chat.messages.push({ role: 'user', content: fullUserMessage });
+  await chat.save();
+
+  await chat.save();
   gpt(
     {
-      messages,
+      messages: chat.messages,
       model: 'GPT-4',
       markdown: false,
     },
-    (err, data) => {
+    async (err, data) => {
       if (err !== null) {
-        ctx.reply('Не удалось сгенерировать ответ! Попробуйте еще раз. 😔')
+        ctx.reply('Не удалось сгенерировать ответ! Попробуйте еще раз. 😔');
       } else {
-        const response = data.gpt
-        console.log(response)
+        const response = data.gpt;
+        console.log(response);
         if (loadingMessageToUser && 'message_id' in loadingMessageToUser) {
           ctx.telegram.deleteMessage(
             ctx.chat.id,
             loadingMessageToUser.message_id
-          )
+          );
         }
-        ctx.reply(response, { parse_mode: 'Markdown' })
-        chatHistory[chatId].push({ role: 'user', content: fullUserMessage })
-        chatHistory[chatId].push({ role: 'assistant', content: response })
+        ctx.reply(response, { parse_mode: 'Markdown' });
+        chat.messages.push({ role: 'assistant', content: response });
+        await chat.save();
       }
     }
-  )
-}
+  );
+};
 module.exports = {
   chatGPT,
-  chatHistory,
-}
+};
