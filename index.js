@@ -1,5 +1,5 @@
 require('dotenv').config();
-const fs = require('fs');
+const fs = require('fs').promises;
 const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
 const { message } = require('telegraf/filters');
@@ -83,7 +83,7 @@ const handleMedia = async (
     const pathname = new URL(fileLink.href).pathname;
     const format = pathname.split('/').pop().split('.').pop();
     inputFileName = `${uuidv4()}.${format}`;
-    fs.writeFileSync(inputFileName, new Uint8Array(photoData));
+    await fs.writeFile(inputFileName, new Uint8Array(photoData));
 
     const userCaption = ctx.message.caption;
     console.log('user caption', userCaption);
@@ -117,7 +117,7 @@ const handleMedia = async (
     ctx.reply('Произошла ошибка при обработке запроса. 😔');
   } finally {
     if (inputFileName) {
-      fs.unlinkSync(inputFileName);
+      await fs.unlink(inputFileName);
     }
   }
 };
@@ -158,7 +158,7 @@ bot.on('voice', async (ctx) => {
   const response = await fetch(voiceLink.href);
   const voiceData = await response.arrayBuffer();
   const fileName = `${uuidv4()}.mp3`;
-  fs.writeFileSync(fileName, new Uint8Array(voiceData));
+  await fs.writeFile(fileName, new Uint8Array(voiceData));
 
   try {
     const voiceResponse = await processVoiceMessage(fileName);
@@ -185,7 +185,7 @@ bot.on('voice', async (ctx) => {
             loadingMessageToUser.message_id
           );
           ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id);
-          fs.unlinkSync(fileName);
+          await fs.unlink(fileName);
         }
         chat.messages.push({ role: 'assistant', content: data.gpt });
         await chat.save();
