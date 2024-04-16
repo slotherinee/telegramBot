@@ -36,9 +36,14 @@ const chatGPT = async (ctx, loadingMessageToUser, tesseractResponse) => {
             loadingMessageToUser.message_id
           );
         }
-        ctx.reply(response, { parse_mode: 'Markdown' });
-        chat.messages.push({ role: 'assistant', content: response });
-        await chat.save();
+        try {
+          ctx.reply(response, { parse_mode: 'Markdown' });
+          chat.messages.push({ role: 'assistant', content: response });
+          await chat.save();
+        } catch (err) {
+          console.log(err);
+          ctx.reply('Не удалось отправить ответ! Попробуйте еще раз. 😔');
+        }
       }
     }
   );

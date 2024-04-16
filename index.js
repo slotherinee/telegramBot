@@ -178,17 +178,27 @@ bot.on('voice', async (ctx) => {
           console.log(err);
           ctx.reply('Произошла ошибка при обработке запроса. 😔');
         } else {
-          ctx.reply(data.gpt, { parse_mode: 'Markdown' });
-          console.log('голосовое сообщение', data.gpt);
-          ctx.telegram.deleteMessage(
-            ctx.chat.id,
-            loadingMessageToUser.message_id
-          );
-          ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id);
-          await fs.unlink(fileName);
+          try {
+            ctx.reply(data.gpt, { parse_mode: 'Markdown' });
+            console.log('голосовое сообщение', data.gpt);
+            ctx.telegram.deleteMessage(
+              ctx.chat.id,
+              loadingMessageToUser.message_id
+            );
+            ctx.telegram.deleteMessage(
+              ctx.chat.id,
+              gotVoiceResponse.message_id
+            );
+            await fs.unlink(fileName);
+            chat.messages.push({ role: 'assistant', content: data.gpt });
+            await chat.save();
+          } catch (err) {
+            console.log(err);
+            ctx.reply(
+              'Произошла ошибка при обработке голосового сообщения. 😔'
+            );
+          }
         }
-        chat.messages.push({ role: 'assistant', content: data.gpt });
-        await chat.save();
       }
     );
   } catch (err) {
