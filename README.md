@@ -6,7 +6,8 @@ You can ask GPT-4 to generate any text or code.
 You can send voice message to this bot and GPT-4 will respond.  
 You can send image which text and ask him to do something with that. 
 
-Also you can generate images using this bot. Example how to generate images: /pg spider-man flying over manhattan
+Also you can generate images using this bot.  
+Example how to generate images: /pg spider-man flying over manhattan  
 
 List of models which are used in bot: 
 /pg (Playground) [Recommended]  
