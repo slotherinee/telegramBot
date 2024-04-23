@@ -1,72 +1,66 @@
-require('dotenv').config();
-const fs = require('fs').promises;
-const mongoose = require('mongoose');
-const { Telegraf } = require('telegraf');
-const { message } = require('telegraf/filters');
-const { chatGPT } = require('./chatGPT');
-const generateModel = require('./generateModels');
-const commandToModelData = require('./commands');
-const { v4: uuidv4 } = require('uuid');
-const { gpt } = require('gpti');
+require('dotenv').config()
+const fs = require('fs').promises
+const mongoose = require('mongoose')
+const { Telegraf } = require('telegraf')
+const { message } = require('telegraf/filters')
+const { chatGPT } = require('./chatGPT')
+const generateModel = require('./generateModels')
+const commandToModelData = require('./commands')
+const { v4: uuidv4 } = require('uuid')
+const { gpt } = require('gpti')
 const {
   generateTextFromImage,
   processVoiceMessage,
   processReadingFromImage,
-} = require('./utils');
-const { allowedChats } = require('./allowedChats');
-const ChatHistory = require('./mongodbModel');
+} = require('./utils')
+const ChatHistory = require('./mongodbModel')
 
 if (!process.env.TELEGRAM_TOKEN)
-  throw new Error('"BOT_TOKEN" env var is required!');
+  throw new Error('"BOT_TOKEN" env var is required!')
 
-const telegramToken = process.env.TELEGRAM_TOKEN;
-const bot = new Telegraf(telegramToken);
+const telegramToken = process.env.TELEGRAM_TOKEN
+const bot = new Telegraf(telegramToken)
 
 const connectToDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URL);
+    await mongoose.connect(process.env.MONGODB_URL)
 
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB')
   } catch (error) {
-    console.log('Error connecting to MongoDB:', error);
+    console.log('Error connecting to MongoDB:', error)
   }
-};
-connectToDB();
+}
+connectToDB()
 
 bot.start((ctx) => {
-  ctx.reply('Привет! 👋');
-  ctx.reply('Напиши мне что-нибудь и я постараюсь помочь! 😊');
+  ctx.reply('Привет! 👋')
+  ctx.reply('Напиши мне что-нибудь и я постараюсь помочь! 😊')
   ctx.reply(
     'Также можешь отправить мне голосовое сообщение. Я попробую его понять и ответить на него 😉'
-  );
+  )
   ctx.reply(
     'Или используй команды /pg, /dalle, /prodia, /xlprodia, /xxlprodia, /emi, /diffusion, /real, /render /journey, /cyber, /pixelart, /anime, /anima'
-  );
-});
+  )
+})
 
 bot.command('clear', async (ctx) => {
-  const chatId = ctx.chat.id;
-  await ChatHistory.findOneAndUpdate({ chatId }, { messages: [] });
-  ctx.reply('Контекст очищен! 🧹');
-});
+  const chatId = ctx.chat.id
+  await ChatHistory.findOneAndUpdate({ chatId }, { messages: [] })
+  ctx.reply('Контекст очищен! 🧹')
+})
 
 bot.on(message('text'), async (ctx) => {
   if (!ctx.message.text) {
-    ctx.reply('Пожалуйста, отправьте текстовое сообщение!');
+    ctx.reply('Пожалуйста, отправьте текстовое сообщение!')
   }
-  if (allowedChats.includes(ctx.chat.id.toString())) {
-    console.log(ctx.message.from.first_name, ctx.message.text);
-    const loadingMessageToUser = await ctx.reply('Генерирую...🙂');
-    const command = `${ctx.message.text.split(' ')[0]}`;
-    if (command in commandToModelData) {
-      generateModel(ctx, loadingMessageToUser, commandToModelData[command]);
-    } else {
-      chatGPT(ctx, loadingMessageToUser);
-    }
+  const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
+  const command = `${ctx.message.text.split(' ')[0]}`
+  if (command in commandToModelData) {
+    generateModel(ctx, loadingMessageToUser, commandToModelData[command])
   } else {
-    ctx.reply('У вас нет прав для использования этого бота!');
+    chatGPT(ctx, loadingMessageToUser)
   }
-});
+})
 
 const handleMedia = async (
   ctx,
@@ -74,98 +68,95 @@ const handleMedia = async (
   loadingMessage,
   generateTextFromImage
 ) => {
-  let inputFileName;
+  let inputFileName
   try {
-    const largestPhoto = ctx.message.photo.pop();
-    const fileLink = await bot.telegram.getFileLink(largestPhoto.file_id);
-    const response = await fetch(fileLink.href);
-    const photoData = await response.arrayBuffer();
-    const pathname = new URL(fileLink.href).pathname;
-    const format = pathname.split('/').pop().split('.').pop();
-    inputFileName = `${uuidv4()}.${format}`;
-    await fs.writeFile(inputFileName, new Uint8Array(photoData));
+    const largestPhoto = ctx.message.photo.pop()
+    const fileLink = await bot.telegram.getFileLink(largestPhoto.file_id)
+    const response = await fetch(fileLink.href)
+    const photoData = await response.arrayBuffer()
+    const pathname = new URL(fileLink.href).pathname
+    const format = pathname.split('/').pop().split('.').pop()
+    inputFileName = `${uuidv4()}.${format}`
+    await fs.writeFile(inputFileName, new Uint8Array(photoData))
 
-    const userCaption = ctx.message.caption;
-    console.log('user caption', userCaption);
+    const userCaption = ctx.message.caption
 
     if (userCaption) {
-      const command = userCaption.split(' ')[0];
+      const command = userCaption.split(' ')[0]
       if (command in commandToModelData) {
-        const generatedText = await generateTextFromImage(inputFileName);
-        console.log('ai caption', generatedText);
+        const generatedText = await generateTextFromImage(inputFileName)
         generateModel(
           ctx,
           loadingMessage,
           commandToModelData[command],
           `${generatedText} ${userCaption}`
-        );
+        )
       } else {
         const tesseractResponse = await processReadingFromImage(
           `${inputFileName}`
-        );
-        chatGPT(ctx, loadingMessage, tesseractResponse);
+        )
+        chatGPT(ctx, loadingMessage, tesseractResponse)
       }
     } else {
       const tesseractResponse = await processReadingFromImage(
         `${inputFileName}`
-      );
+      )
 
-      chatGPT(ctx, loadingMessage, tesseractResponse);
+      chatGPT(ctx, loadingMessage, tesseractResponse)
     }
   } catch (error) {
-    console.log(error);
-    ctx.reply('Произошла ошибка при обработке запроса. 😔');
+    console.log(error)
+    ctx.reply('Произошла ошибка при обработке запроса. 😔')
   } finally {
     if (inputFileName) {
-      await fs.unlink(inputFileName);
+      await fs.unlink(inputFileName)
     }
   }
-};
+}
 
 bot.on(message('sticker'), async (ctx) => {
-  const loadingMessageToUser = await ctx.reply('Генерирую фото...');
+  const loadingMessageToUser = await ctx.reply('Генерирую фото...')
   await handleMedia(
     ctx,
     ctx.message.sticker.file_id,
     loadingMessageToUser,
     generateTextFromImage
-  );
-});
+  )
+})
 
 bot.on('photo', async (ctx) => {
-  const loadingMessageToUser = await ctx.reply('Генерирую...🙂');
+  const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
   await handleMedia(
     ctx,
     ctx.message.photo[0].file_id,
     loadingMessageToUser,
     generateTextFromImage
-  );
-});
+  )
+})
 
 bot.on('voice', async (ctx) => {
-  const chatId = ctx.chat.id;
+  const chatId = ctx.chat.id
 
-  let chat = await ChatHistory.findOne({ chatId });
+  let chat = await ChatHistory.findOne({ chatId })
   if (!chat) {
-    chat = new ChatHistory({ chatId, messages: [] });
+    chat = new ChatHistory({ chatId, messages: [] })
   }
 
   const loadingMessageToUser = await ctx.reply(
     'Пытаюсь распознать сообщение...👂'
-  );
-  const fileId = ctx.message.voice.file_id;
-  const voiceLink = await bot.telegram.getFileLink(fileId);
-  const response = await fetch(voiceLink.href);
-  const voiceData = await response.arrayBuffer();
-  const fileName = `${uuidv4()}.mp3`;
-  await fs.writeFile(fileName, new Uint8Array(voiceData));
+  )
+  const fileId = ctx.message.voice.file_id
+  const voiceLink = await bot.telegram.getFileLink(fileId)
+  const response = await fetch(voiceLink.href)
+  const voiceData = await response.arrayBuffer()
+  const fileName = `${uuidv4()}.mp3`
+  await fs.writeFile(fileName, new Uint8Array(voiceData))
 
   try {
-    const voiceResponse = await processVoiceMessage(fileName);
-    console.log('voice response', voiceResponse);
-    const gotVoiceResponse = await ctx.reply('Генерирую ответ...🙂');
-    chat.messages.push({ role: 'user', content: voiceResponse });
-    await chat.save();
+    const voiceResponse = await processVoiceMessage(fileName)
+    const gotVoiceResponse = await ctx.reply('Генерирую ответ...🙂')
+    chat.messages.push({ role: 'user', content: voiceResponse })
+    await chat.save()
 
     gpt(
       {
@@ -175,45 +166,39 @@ bot.on('voice', async (ctx) => {
       },
       async (err, data) => {
         if (err) {
-          console.log(err);
-          ctx.reply('Произошла ошибка при обработке запроса. 😔');
+          console.log(err)
+          ctx.reply('Произошла ошибка при обработке запроса. 😔')
         } else {
           try {
-            ctx.reply(data.gpt, { parse_mode: 'Markdown' });
-            console.log('голосовое сообщение', data.gpt);
+            ctx.reply(data.gpt, { parse_mode: 'Markdown' })
             ctx.telegram.deleteMessage(
               ctx.chat.id,
               loadingMessageToUser.message_id
-            );
-            ctx.telegram.deleteMessage(
-              ctx.chat.id,
-              gotVoiceResponse.message_id
-            );
-            await fs.unlink(fileName);
-            chat.messages.push({ role: 'assistant', content: data.gpt });
-            await chat.save();
+            )
+            ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id)
+            await fs.unlink(fileName)
+            chat.messages.push({ role: 'assistant', content: data.gpt })
+            await chat.save()
           } catch (err) {
-            console.log(err);
-            ctx.reply(
-              'Произошла ошибка при обработке голосового сообщения. 😔'
-            );
+            console.log(err)
+            ctx.reply('Произошла ошибка при обработке голосового сообщения. 😔')
           }
         }
       }
-    );
+    )
   } catch (err) {
-    console.log(err);
-    ctx.reply('Произошла ошибка при обработке голосового сообщения. 😔');
+    console.log(err)
+    ctx.reply('Произошла ошибка при обработке голосового сообщения. 😔')
   }
-});
+})
 
 bot.catch((err, ctx) => {
-  console.error('Ошибка:', err);
-  ctx.reply('Произошла ошибка при обработке запроса. 😔');
-});
+  console.error('Ошибка:', err)
+  ctx.reply('Произошла ошибка при обработке запроса. 😔')
+})
 
-bot.launch();
-console.log('bot launched');
+bot.launch()
+console.log('bot launched')
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => bot.stop('SIGINT'))
+process.once('SIGTERM', () => bot.stop('SIGTERM'))

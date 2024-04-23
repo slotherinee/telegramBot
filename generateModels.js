@@ -9,13 +9,11 @@ const generateModel = async (
 ) => {
   const modelFnCallback = async (err, data) => {
     if (err != null) {
-      console.log(err)
       ctx.reply('Не удалось сгенерировать изображение! Ошибка сервера! 😔')
     } else {
       try {
         await processModel(data, ctx, loadingMessageToUser)
       } catch (err) {
-        console.log(err)
         ctx.reply(
           'Не удалось сгенерировать изображение! Произошла ошибка преобразования картинки! 😔'
         )
