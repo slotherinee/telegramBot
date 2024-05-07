@@ -1,24 +1,18 @@
-const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const mongoose = require('mongoose')
+const { Schema, model } = mongoose
 
-const chatHistorySchema = new Schema({
+const messageSchema = new Schema({
+  role: String,
+  content: Schema.Types.Mixed,
+})
+
+const ChatHistorySchema = new Schema({
   chatId: {
     type: String,
     required: true,
   },
-  messages: [
-    {
-      role: {
-        type: String,
-        required: true,
-      },
-      content: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-});
+  messages: [messageSchema],
+})
 
-const ChatHistory = model('ChatHistory', chatHistorySchema);
-module.exports = ChatHistory;
+const ChatHistory = model('ChatHistory', ChatHistorySchema)
+module.exports = ChatHistory

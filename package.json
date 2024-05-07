@@ -19,12 +19,10 @@
     "gpti": "^2.0.6",
     "mongoose": "^8.3.1",
     "nodemon": "^3.1.0",
+    "openai": "^4.41.1",
     "sharp": "^0.33.3",
     "telegraf": "^4.15.3",
     "tesseract.js": "^5.0.5",
     "uuid": "^9.0.1"
-  },
-  "devDependencies": {
-    "@gradio/client": "^0.15.0"
   }
 }
