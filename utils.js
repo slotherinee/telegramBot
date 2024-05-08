@@ -85,7 +85,11 @@ const processVoiceMessage = async (fileName) => {
 }
 
 function safeMarkdown(string) {
-  return string.replace(/\* \*\*/g, '**')
+  return string
+    .replace(/\*/g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n')
 }
 
 module.exports = {

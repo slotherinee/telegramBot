@@ -61,11 +61,16 @@ bot.on(message('text'), async (ctx) => {
     const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
     const command = `${ctx.message.text.split(' ')[0]}`
     if (command in commandToModelData) {
-      generateModel(ctx, loadingMessageToUser, commandToModelData[command])
+      await generateModel(
+        ctx,
+        loadingMessageToUser,
+        commandToModelData[command]
+      )
     } else {
-      chatGPT(ctx, loadingMessageToUser)
+      await chatGPT(ctx, loadingMessageToUser)
     }
   } catch (error) {
+    console.error('Error handling message:', error)
     ctx.reply('Произошла ошибка при обработке запроса. 😔')
   }
 })
@@ -74,14 +79,30 @@ const handleMedia = async (ctx, loadingMessage, generateTextFromImage) => {
   let inputFileName
   try {
     const largestPhoto = ctx.message.photo.pop()
-    const fileLink = await bot.telegram.getFileLink(largestPhoto.file_id)
+    let fileLink
+    try {
+      fileLink = await bot.telegram.getFileLink(largestPhoto.file_id)
+    } catch (error) {
+      console.error('Failed to get file link:', error)
+      ctx.reply(
+        'An error occurred while getting the file link. Please try again.'
+      )
+      return
+    }
+
     const response = await fetch(fileLink.href)
     const photoData = await response.arrayBuffer()
     const pathname = new URL(fileLink.href).pathname
     const format = pathname.split('/').pop().split('.').pop()
     inputFileName = `${uuidv4()}.${format}`
-    await fs.writeFile(inputFileName, new Uint8Array(photoData))
 
+    try {
+      await fs.writeFile(inputFileName, new Uint8Array(photoData))
+    } catch (error) {
+      console.error('Failed to write file:', error)
+      ctx.reply('An error occurred while writing the file. Please try again.')
+      return
+    }
     const userCaption = ctx.message.caption
     if (userCaption) {
       const command = userCaption.split(' ')[0]
@@ -104,7 +125,11 @@ const handleMedia = async (ctx, loadingMessage, generateTextFromImage) => {
     ctx.reply('Произошла ошибка при обработке запроса. 😔')
   } finally {
     if (inputFileName) {
-      await fs.unlink(inputFileName)
+      try {
+        await fs.unlink(inputFileName)
+      } catch (error) {
+        console.error('Failed to delete file:', error)
+      }
     }
   }
 }
@@ -169,8 +194,12 @@ bot.catch((err, ctx) => {
   ctx.reply('Произошла ошибка при обработке запроса. 😔')
 })
 
-bot.launch()
-console.log('bot launched')
+try {
+  bot.launch()
+  console.log('bot launched')
+} catch (error) {
+  console.log(error)
+}
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
