@@ -92,7 +92,16 @@ async function GPT4(messages) {
         ...messages,
       ],
     })
-    return response.choices[0].message.content
+    if (
+      response.choices &&
+      response.choices[0] &&
+      response.choices[0].message &&
+      response.choices[0].message.content
+    ) {
+      return response.choices[0].message.content
+    } else {
+      throw new Error('Unexpected response format')
+    }
   } catch (error) {
     console.log(error)
     throw new Error('Не удалось сгенерировать ответ! Попробуйте еще раз. 😔')
