@@ -8,41 +8,39 @@ const openai = new OpenAI({
   baseURL: process.env.BASE_URL,
 })
 
-async function chatGPT(ctx, loadingMessageToUser, inputFileName) {
+async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
   try {
+    const userMessage = ctx.message.text || ctx.message.caption || ''
     const chatId = ctx.chat.id
     const username = ctx.message.from.username
 
     let chat = await ChatHistory.findOne({ chatId })
     if (!chat) {
-      chat = new ChatHistory({ chatId, username, messages: [] })
+      chat = new ChatHistory({
+        chatId,
+        username,
+        messages: [],
+      })
     }
-    const userMessage = ctx.message.text || ctx.message.caption || ''
 
-    if (inputFileName) {
-      try {
-        const imageBuffer = await fs.readFile(inputFileName)
-        const base64Image = imageBuffer.toString('base64')
-
-        chat.messages.push({
-          role: 'user',
-          content: [
-            { type: 'text', text: userMessage },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-              },
-            },
-          ],
-        })
-      } catch (error) {
-        console.error('Failed to read file:', error)
-        ctx.reply('An error occurred while reading the file. Please try again.')
-        return
-      }
-    } else {
+    if (imageFilePaths.length === 0) {
       chat.messages.push({ role: 'user', content: userMessage })
+    } else {
+      const messageContent = [{ type: 'text', text: userMessage }]
+      for (const imageFilePath of imageFilePaths) {
+        const imageBuffer = await fs.readFile(imageFilePath)
+        const base64Image = imageBuffer.toString('base64')
+        messageContent.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`,
+          },
+        })
+      }
+      chat.messages.push({
+        role: 'user',
+        content: messageContent,
+      })
     }
 
     if (!chat.username) {
@@ -56,12 +54,14 @@ async function chatGPT(ctx, loadingMessageToUser, inputFileName) {
       ctx.reply('An error occurred while saving the chat. Please try again.')
       return
     }
+
     const data = await GPT4(chat.messages)
     if (data instanceof Error) {
       throw new Error(data.message)
     }
     const response = safeMarkdown(data)
     chat.messages.push({ role: 'assistant', content: response })
+
     try {
       if (loadingMessageToUser && 'message_id' in loadingMessageToUser) {
         ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
@@ -69,11 +69,13 @@ async function chatGPT(ctx, loadingMessageToUser, inputFileName) {
     } catch (error) {
       console.error('Failed to delete message:', error)
     }
+
     try {
       ctx.reply(response, { parse_mode: 'Markdown' })
     } catch (error) {
       console.error('Failed to send reply:', error)
     }
+
     try {
       await chat.save()
     } catch (error) {

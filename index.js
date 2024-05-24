@@ -75,61 +75,148 @@ bot.on(message('text'), async (ctx) => {
   }
 })
 
-const handleMedia = async (ctx, loadingMessage, generateTextFromImage) => {
-  let inputFileName
-  try {
-    const largestPhoto = ctx.message.photo.pop()
-    let fileLink
-    try {
-      fileLink = await bot.telegram.getFileLink(largestPhoto.file_id)
-    } catch (error) {
-      console.error('Failed to get file link:', error)
-      ctx.reply(
-        'An error occurred while getting the file link. Please try again.'
-      )
-      return
-    }
-    const response = await fetch(fileLink.href)
-    const photoData = await response.arrayBuffer()
-    const pathname = new URL(fileLink.href).pathname
-    const format = pathname.split('/').pop().split('.').pop()
-    inputFileName = `${uuidv4()}.${format}`
+const mediaGroupStore = new Map()
 
-    try {
-      await fs.writeFile(inputFileName, new Uint8Array(photoData))
-    } catch (error) {
-      console.error('Failed to write file:', error)
-      ctx.reply('An error occurred while writing the file. Please try again.')
-      return
-    }
-    const userCaption = ctx.message.caption
-    if (userCaption) {
-      const command = userCaption.split(' ')[0]
-      if (command in commandToModelData) {
-        const generatedText = await generateTextFromImage(inputFileName)
-        generateModel(
-          ctx,
-          loadingMessage,
-          commandToModelData[command],
-          `${generatedText} ${userCaption}`
-        )
-      } else {
-        await chatGPT(ctx, loadingMessage, inputFileName)
+const handleMedia = async (ctx, generateTextFromImage) => {
+  try {
+    const mediaGroupId = ctx.message.media_group_id
+    const largestPhoto = ctx.message.photo.pop()
+    const fileId = largestPhoto.file_id
+
+    if (mediaGroupId) {
+      if (!mediaGroupStore.has(mediaGroupId)) {
+        mediaGroupStore.set(mediaGroupId, { fileIds: [] })
       }
+
+      mediaGroupStore.get(mediaGroupId).fileIds.push(fileId)
+
+      // Process after a short delay to ensure all photos are collected
+      setTimeout(async () => {
+        const mediaGroupData = mediaGroupStore.get(mediaGroupId)
+        if (!mediaGroupData) return
+
+        const { fileIds } = mediaGroupData
+
+        // Clear the store for the media group ID to avoid reprocessing
+        mediaGroupStore.delete(mediaGroupId)
+
+        const imageFilePaths = []
+        for (const fileId of fileIds) {
+          let fileLink
+          try {
+            fileLink = await bot.telegram.getFileLink(fileId)
+          } catch (error) {
+            console.error('Failed to get file link:', error)
+            ctx.reply(
+              'An error occurred while getting the file link. Please try again.'
+            )
+            return
+          }
+
+          const response = await fetch(fileLink.href)
+          const photoData = await response.arrayBuffer()
+          const pathname = new URL(fileLink.href).pathname
+          const format = pathname.split('/').pop().split('.').pop()
+          const inputFileName = `${uuidv4()}.${format}`
+
+          try {
+            await fs.writeFile(inputFileName, new Uint8Array(photoData))
+          } catch (error) {
+            console.error('Failed to write file:', error)
+            ctx.reply(
+              'An error occurred while writing the file. Please try again.'
+            )
+            return
+          }
+
+          imageFilePaths.push(inputFileName)
+        }
+
+        const loadingMessage = await ctx.reply('Генерирую...🙂')
+
+        const userCaption = ctx.message.caption
+        if (userCaption) {
+          const command = userCaption.split(' ')[0]
+          if (command in commandToModelData) {
+            const generatedText = await generateTextFromImage(imageFilePaths[0]) // Only use the first image for generating text
+            generateModel(
+              ctx,
+              loadingMessage,
+              commandToModelData[command],
+              `${generatedText} ${userCaption}`
+            )
+          } else {
+            await chatGPT(ctx, loadingMessage, imageFilePaths)
+          }
+        } else {
+          await chatGPT(ctx, loadingMessage, imageFilePaths)
+        }
+
+        // Clean up image files
+        for (const imageFilePath of imageFilePaths) {
+          try {
+            await fs.unlink(imageFilePath)
+          } catch (error) {
+            console.error('Failed to delete file:', error)
+          }
+        }
+      }, 500) // Delay to ensure all photos are collected
     } else {
-      await chatGPT(ctx, loadingMessage, inputFileName)
-    }
-  } catch (error) {
-    console.log(error)
-    ctx.reply('Произошла ошибка при обработке запроса. 😔')
-  } finally {
-    if (inputFileName) {
+      // Handle single photo as usual
+      let fileLink
+      try {
+        fileLink = await bot.telegram.getFileLink(fileId)
+      } catch (error) {
+        console.error('Failed to get file link:', error)
+        ctx.reply(
+          'An error occurred while getting the file link. Please try again.'
+        )
+        return
+      }
+
+      const response = await fetch(fileLink.href)
+      const photoData = await response.arrayBuffer()
+      const pathname = new URL(fileLink.href).pathname
+      const format = pathname.split('/').pop().split('.').pop()
+      const inputFileName = `${uuidv4()}.${format}`
+
+      try {
+        await fs.writeFile(inputFileName, new Uint8Array(photoData))
+      } catch (error) {
+        console.error('Failed to write file:', error)
+        ctx.reply('An error occurred while writing the file. Please try again.')
+        return
+      }
+
+      const loadingMessage = await ctx.reply('Генерирую...🙂')
+
+      const userCaption = ctx.message.caption
+      if (userCaption) {
+        const command = userCaption.split(' ')[0]
+        if (command in commandToModelData) {
+          const generatedText = await generateTextFromImage(inputFileName)
+          generateModel(
+            ctx,
+            loadingMessage,
+            commandToModelData[command],
+            `${generatedText} ${userCaption}`
+          )
+        } else {
+          await chatGPT(ctx, loadingMessage, [inputFileName])
+        }
+      } else {
+        await chatGPT(ctx, loadingMessage, [inputFileName])
+      }
+
       try {
         await fs.unlink(inputFileName)
       } catch (error) {
         console.error('Failed to delete file:', error)
       }
     }
+  } catch (error) {
+    console.log(error)
+    ctx.reply('Произошла ошибка при обработке запроса. 😔')
   }
 }
 
@@ -138,8 +225,7 @@ bot.on(message('sticker'), async (ctx) => {
 })
 
 bot.on('photo', async (ctx) => {
-  const loadingMessageToUser = await ctx.reply('Генерирую...🙂')
-  await handleMedia(ctx, loadingMessageToUser, generateTextFromImage)
+  await handleMedia(ctx, generateTextFromImage)
 })
 
 bot.on('voice', async (ctx) => {
@@ -196,7 +282,7 @@ bot.catch((err, ctx) => {
 
 try {
   bot.launch()
-  console.log('bot launched')
+  console.log('Bot launched successfully')
 } catch (error) {
   console.log(error)
 }

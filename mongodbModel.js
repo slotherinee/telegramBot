@@ -1,12 +1,7 @@
 const mongoose = require('mongoose')
 const { Schema, model } = mongoose
 
-const messageSchema = new Schema({
-  role: String,
-  content: Schema.Types.Mixed,
-})
-
-const ChatHistorySchema = new Schema({
+const chatHistorySchema = new Schema({
   chatId: {
     type: String,
     required: true,
@@ -15,8 +10,8 @@ const ChatHistorySchema = new Schema({
     type: String,
     required: true,
   },
-  messages: [messageSchema],
+  messages: [Schema.Types.Mixed],
 })
 
-const ChatHistory = model('ChatHistory', ChatHistorySchema)
+const ChatHistory = model('ChatHistory', chatHistorySchema)
 module.exports = ChatHistory
