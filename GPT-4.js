@@ -11,9 +11,11 @@ const openai = new OpenAI({
 async function chatGPT(ctx, loadingMessageToUser, inputFileName) {
   try {
     const chatId = ctx.chat.id
+    const username = ctx.message.from.username
+
     let chat = await ChatHistory.findOne({ chatId })
     if (!chat) {
-      chat = new ChatHistory({ chatId, messages: [] })
+      chat = new ChatHistory({ chatId, username, messages: [] })
     }
     const userMessage = ctx.message.text || ctx.message.caption || ''
 
@@ -42,6 +44,11 @@ async function chatGPT(ctx, loadingMessageToUser, inputFileName) {
     } else {
       chat.messages.push({ role: 'user', content: userMessage })
     }
+
+    if (!chat.username) {
+      chat.username = username
+    }
+
     try {
       await chat.save()
     } catch (error) {

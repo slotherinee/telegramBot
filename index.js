@@ -89,7 +89,6 @@ const handleMedia = async (ctx, loadingMessage, generateTextFromImage) => {
       )
       return
     }
-
     const response = await fetch(fileLink.href)
     const photoData = await response.arrayBuffer()
     const pathname = new URL(fileLink.href).pathname
@@ -145,10 +144,11 @@ bot.on('photo', async (ctx) => {
 
 bot.on('voice', async (ctx) => {
   const chatId = ctx.chat.id
+  const username = ctx.message.from.username
 
   let chat = await ChatHistory.findOne({ chatId })
   if (!chat) {
-    chat = new ChatHistory({ chatId, messages: [] })
+    chat = new ChatHistory({ chatId, username, messages: [] })
   }
 
   const loadingMessageToUser = await ctx.reply(
