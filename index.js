@@ -237,6 +237,14 @@ bot.on('voice', async (ctx) => {
     chat = new ChatHistory({ chatId, username, messages: [] })
   }
 
+  if (!chat.username) {
+    chat.username = username
+  }
+
+  if (!chat.messages) {
+    chat.messages = []
+  }
+
   const loadingMessageToUser = await ctx.reply(
     'Пытаюсь распознать сообщение...👂'
   )

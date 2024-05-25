@@ -23,6 +23,14 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       })
     }
 
+    if (!chat.username) {
+      chat.username = username
+    }
+
+    if (!chat.messages) {
+      chat.messages = []
+    }
+
     if (imageFilePaths.length === 0) {
       chat.messages.push({ role: 'user', content: userMessage })
     } else {
@@ -41,10 +49,6 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         role: 'user',
         content: messageContent,
       })
-    }
-
-    if (!chat.username) {
-      chat.username = username
     }
 
     try {
