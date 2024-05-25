@@ -230,7 +230,7 @@ bot.on('photo', async (ctx) => {
 
 bot.on('voice', async (ctx) => {
   const chatId = ctx.chat.id
-  const username = ctx.message.from.username
+  const username = ctx.message.from.username || ctx.message.from.first_name
 
   let chat = await ChatHistory.findOne({ chatId })
   if (!chat) {
@@ -239,10 +239,24 @@ bot.on('voice', async (ctx) => {
 
   if (!chat.username) {
     chat.username = username
+    try {
+      await chat.save()
+    } catch (error) {
+      console.error('Failed to save chat [username]:', error)
+      ctx.reply('An error occurred while saving the chat. Please try again.')
+      return
+    }
   }
 
   if (!chat.messages) {
     chat.messages = []
+    try {
+      await chat.save()
+    } catch (error) {
+      console.error('Failed to save chat [messages]:', error)
+      ctx.reply('An error occurred while saving the chat. Please try again.')
+      return
+    }
   }
 
   const loadingMessageToUser = await ctx.reply(
