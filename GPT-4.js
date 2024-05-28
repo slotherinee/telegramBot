@@ -2,6 +2,7 @@ const fs = require('fs/promises')
 const ChatHistory = require('./mongodbModel')
 const OpenAI = require('openai')
 const { safeMarkdown } = require('./utils')
+const { sanitizeMarkdown } = require('telegram-markdown-sanitizer')
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -64,7 +65,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     if (data instanceof Error) {
       throw new Error(data.message)
     }
-    const response = safeMarkdown(data)
+    const response = sanitizeMarkdown(data)
     chat.messages.push({ role: 'assistant', content: response })
 
     try {
@@ -76,7 +77,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     }
 
     try {
-      ctx.reply(response, { parse_mode: 'Markdown' })
+      ctx.reply(response, { parse_mode: 'MarkdownV2' })
     } catch (error) {
       console.error('Failed to send reply:', error)
     }

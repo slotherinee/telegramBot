@@ -13,6 +13,7 @@ const {
 } = require('./utils')
 const ChatHistory = require('./mongodbModel')
 const { chatGPT, GPT4 } = require('./GPT-4')
+const { sanitizeMarkdown } = require('telegram-markdown-sanitizer')
 
 if (!process.env.TELEGRAM_TOKEN)
   throw new Error('"BOT_TOKEN" env var is required!')
@@ -90,14 +91,12 @@ const handleMedia = async (ctx, generateTextFromImage) => {
 
       mediaGroupStore.get(mediaGroupId).fileIds.push(fileId)
 
-      // Process after a short delay to ensure all photos are collected
       setTimeout(async () => {
         const mediaGroupData = mediaGroupStore.get(mediaGroupId)
         if (!mediaGroupData) return
 
         const { fileIds } = mediaGroupData
 
-        // Clear the store for the media group ID to avoid reprocessing
         mediaGroupStore.delete(mediaGroupId)
 
         const imageFilePaths = []
@@ -138,7 +137,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         if (userCaption) {
           const command = userCaption.split(' ')[0]
           if (command in commandToModelData) {
-            const generatedText = await generateTextFromImage(imageFilePaths[0]) // Only use the first image for generating text
+            const generatedText = await generateTextFromImage(imageFilePaths[0])
             generateModel(
               ctx,
               loadingMessage,
@@ -152,7 +151,6 @@ const handleMedia = async (ctx, generateTextFromImage) => {
           await chatGPT(ctx, loadingMessage, imageFilePaths)
         }
 
-        // Clean up image files
         for (const imageFilePath of imageFilePaths) {
           try {
             await fs.unlink(imageFilePath)
@@ -160,9 +158,8 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             console.error('Failed to delete file:', error)
           }
         }
-      }, 500) // Delay to ensure all photos are collected
+      }, 500)
     } else {
-      // Handle single photo as usual
       let fileLink
       try {
         fileLink = await bot.telegram.getFileLink(fileId)
@@ -266,13 +263,13 @@ bot.on('voice', async (ctx) => {
     if (data instanceof Error) {
       throw new Error(data.message)
     }
-    const response = safeMarkdown(data)
+    const response = sanitizeMarkdown(data)
     chat.messages.push({ role: 'assistant', content: response })
 
     ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
     ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id)
 
-    ctx.reply(response, { parse_mode: 'Markdown' })
+    ctx.reply(response, { parse_mode: 'MarkdownV2' })
     await chat.save()
   } catch (err) {
     console.log(err)
