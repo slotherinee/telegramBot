@@ -12,7 +12,8 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
   try {
     const userMessage = ctx.message.text || ctx.message.caption || ''
     const chatId = ctx.chat.id
-    const username = ctx.message.from.username || ctx.message.from.first_name
+    const username =
+      ctx.message.from.username || ctx.message.from.first_name || 'no username'
 
     let chat = await ChatHistory.findOne({ chatId })
     if (!chat) {
@@ -25,24 +26,10 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
 
     if (!chat.username) {
       chat.username = username
-      try {
-        await chat.save()
-      } catch (error) {
-        console.error('Failed to save chat [username]:', error)
-        ctx.reply('An error occurred while saving the chat. Please try again.')
-        return
-      }
     }
 
     if (!chat.messages) {
       chat.messages = []
-      try {
-        await chat.save()
-      } catch (error) {
-        console.error('Failed to save chat [messages]:', error)
-        ctx.reply('An error occurred while saving the chat. Please try again.')
-        return
-      }
     }
 
     if (imageFilePaths.length === 0) {
