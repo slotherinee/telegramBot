@@ -69,7 +69,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         if (data instanceof Error) {
             throw new Error(data.message)
         }
-        const response = sanitizeMarkdown(data)
+        const response = sanitizeMarkdown(data).replace(/\\/g, '')
         chat.messages.push({ role: "assistant", content: response })
 
         try {

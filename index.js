@@ -274,7 +274,7 @@ bot.on("voice", async (ctx) => {
         if (data instanceof Error) {
             throw new Error(data.message)
         }
-        const response = sanitizeMarkdown(data)
+        const response = sanitizeMarkdown(data).replace(/\\/g, '')
         chat.messages.push({ role: "assistant", content: response })
 
         ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
