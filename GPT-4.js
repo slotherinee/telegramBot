@@ -119,8 +119,8 @@ async function GPT4(messages) {
             messages: [
                 {
                     role: "system",
-                    content:
-                        "You are a helpful telegram chat-bot assistant. You can help users with their questions and provide information about the image and also you can generate images using commands that written in your description. Speak with user the language he speaks with you. Make sure your response will be helpful and informative. If you are not sure about the answer, you can ask the user for more information."
+                    content: `You are a helpful telegram chat-bot assistant. You can help users with their questions and provide information about the image and also you can generate images using commands that written in your description. Speak with user the language he speaks with you. Make sure your response will be helpful and informative. If you are not sure about the answer, you can ask the user for more information.
+                        Today is ${new Date()} and current time is ${new Date().toLocaleTimeString()}`
                 },
                 ...messages
             ]
