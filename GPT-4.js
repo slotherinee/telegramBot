@@ -1,8 +1,8 @@
 const fs = require("fs/promises")
 const ChatHistory = require("./mongodbModel")
 const OpenAI = require("openai")
-const { safeMarkdown } = require("./utils")
 const { sanitizeMarkdown } = require("telegram-markdown-sanitizer")
+const { processSplitText } = require("./utils")
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -74,6 +74,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
             .replace(/^\*(?=\s)/gm, "•")
             .replace(/\*\*(?=\S)(.*?)(?<=\S)\*\*/g, "*$1*")
         chat.messages.push({ role: "assistant", content: response })
+        const chunks = processSplitText(response, 4096)
 
         try {
             if (loadingMessageToUser && "message_id" in loadingMessageToUser) {
@@ -87,7 +88,9 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         }
 
         try {
-            ctx.reply(response, { parse_mode: "Markdown" })
+            for (const chunk of chunks) {
+                await ctx.reply(chunk, { parse_mode: "Markdown" })
+            }
         } catch (error) {
             console.error("Failed to send reply:", error)
         }

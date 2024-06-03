@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid")
 const {
     generateTextFromImage,
     processVoiceMessage,
-    safeMarkdown
+    processSplitText
 } = require("./utils")
 const ChatHistory = require("./mongodbModel")
 const { chatGPT, GPT4 } = require("./GPT-4")
@@ -279,11 +279,14 @@ bot.on("voice", async (ctx) => {
             .replace(/^\*(?=\s)/gm, "•")
             .replace(/\*\*(?=\S)(.*?)(?<=\S)\*\*/g, "*$1*")
         chat.messages.push({ role: "assistant", content: response })
+        const chunks = processSplitText(response, 4096)
 
         ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id)
         ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id)
 
-        ctx.reply(response, { parse_mode: "Markdown" })
+        for (const chunk of chunks) {
+            await ctx.reply(chunk, { parse_mode: "Markdown" })
+        }
         await chat.save()
     } catch (err) {
         console.log(err)
