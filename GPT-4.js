@@ -69,7 +69,10 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         if (data instanceof Error) {
             throw new Error(data.message)
         }
-        const response = sanitizeMarkdown(data).replace(/\\/g, '')
+        const response = sanitizeMarkdown(data)
+            .replace(/\\/g, "")
+            .replace(/^\*(?=\s)/gm, "•")
+            .replace(/\*\*(?=\S)(.*?)(?<=\S)\*\*/g, "*$1*")
         chat.messages.push({ role: "assistant", content: response })
 
         try {
