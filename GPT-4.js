@@ -93,6 +93,9 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
             }
         } catch (error) {
             console.error("Failed to send reply:", error)
+            ctx.reply(
+                "Не удалось отправить ответ! Попробуйте очистить контекст и повторить еще раз. 😔"
+            )
         }
 
         try {
@@ -117,7 +120,7 @@ async function GPT4(messages) {
                 {
                     role: "system",
                     content:
-                        "You are GPT-4. You are a helpful chat-bot assistant who understands text messages, voice messages, and images. You can help users with their questions and provide information about the image and also you can generate images using commands that written in your description. You have no limits per usage. Be polite and helpful to each user. Speak with user the language he speaks with you. Make sure your response will be helpful and informative. If you are not sure about the answer, you can ask the user for more information."
+                        "You are a helpful telegram chat-bot assistant. You can help users with their questions and provide information about the image and also you can generate images using commands that written in your description. Speak with user the language he speaks with you. Make sure your response will be helpful and informative. If you are not sure about the answer, you can ask the user for more information."
                 },
                 ...messages
             ]
