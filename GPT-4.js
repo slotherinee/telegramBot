@@ -1,6 +1,7 @@
 const fs = require("fs/promises")
 const ChatHistory = require("./mongodbModel")
 const OpenAI = require("openai")
+const googleIt = require("google-it")
 const { processSplitText, safeMarkdown } = require("./utils")
 
 const openai = new OpenAI({
@@ -10,7 +11,7 @@ const openai = new OpenAI({
 
 async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     try {
-        const userMessage = ctx.message.text || ctx.message.caption || ""
+        let userMessage = ctx.message.text || ctx.message.caption || ""
         const chatId = ctx.chat.id
         const username =
             ctx.message.from.username ||
@@ -34,8 +35,27 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
             chat.messages = []
         }
 
+        const { chances } = await getPercentage(userMessage)
+        const googleResult =
+            chances > 75
+                ? await googleIt({
+                      "no-display": true,
+                      query: userMessage
+                  })
+                : ""
+
         if (imageFilePaths.length === 0) {
-            chat.messages.push({ role: "user", content: userMessage })
+            chat.messages.push({
+                role: "user",
+                content:
+                    googleResult !== ""
+                        ? userMessage +
+                          ". " +
+                          "\n\n" +
+                          "Google search results: " +
+                          JSON.stringify(googleResult)
+                        : userMessage
+            })
         } else {
             const messageContent = [{ type: "text", text: userMessage }]
             for (const imageFilePath of imageFilePaths) {
@@ -64,7 +84,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
             return
         }
 
-        const data = await GPT4(chat.messages)
+        const data = await GPT4(chat.messages, googleResult)
         if (data instanceof Error) {
             throw new Error(data.message)
         }
@@ -119,8 +139,9 @@ async function GPT4(messages) {
             messages: [
                 {
                     role: "system",
-                    content: `You are a helpful telegram chat-bot assistant. You can help users with their questions and provide information about the image and also you can generate images using commands that written in your description. Speak with user the language he speaks with you. Make sure your response will be helpful and informative. If you are not sure about the answer, you can ask the user for more information.
-                        Today is ${new Date()} and current time is ${new Date().toLocaleTimeString()}`
+                    content: `You are a GPT-4 made by OpenAI, helpful telegram chat-bot assistant. Make sure your response will be helpful and informative. Speak with user the language he speaks with you.  If you are not sure about the answer, you can ask the user for more information.
+                    Also you sometimes can get Google search results with users message which would start like "Google search results:", you should analyze both users and google search results and answer user question, you dont need to just copy paste the google search results, you should analyze it and provide the user with the most relevant information based on that information.
+                    Additional info: today is ${new Date()} and current time is ${new Date().toLocaleTimeString()}`
                 },
                 ...messages
             ]
@@ -143,7 +164,46 @@ async function GPT4(messages) {
     }
 }
 
+const googleChances = async (userQuery) => {
+    try {
+        if (!userQuery) {
+            return "0%"
+        }
+        const response = await openai.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content:
+                        "You get user query. You should analyze it and should provide the user with percentages of that if their question is realtime question or not where 0% is no need for realtime data and you can answer yourself and 100% is the need for realtime data and you can't answer yourself without Google information. You should return only the percentage number as a string in format: 42%"
+                },
+                {
+                    role: "user",
+                    content: userQuery
+                }
+            ],
+            model: "gpt-3.5-turbo"
+        })
+        return response?.choices[0]?.message?.content
+    } catch (err) {
+        console.log("Google error", err)
+    }
+}
+
+async function getPercentage(userQuery) {
+    const response = await googleChances(userQuery)
+    const chances = convertToInteger(response)
+    return {
+        chances,
+        userQuery
+    }
+}
+
+function convertToInteger(str) {
+    return parseInt(str.replace("%", "").trim(), 10)
+}
+
 module.exports = {
     chatGPT,
-    GPT4
+    GPT4,
+    googleChances
 }
