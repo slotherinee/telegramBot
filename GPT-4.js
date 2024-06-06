@@ -9,6 +9,11 @@ const openai = new OpenAI({
     baseURL: process.env.BASE_URL
 })
 
+const openai_second = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY_SECOND,
+    baseURL: process.env.BASE_URL_SECOND
+})
+
 async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     try {
         let userMessage = ctx.message.text || ctx.message.caption || ""
@@ -169,12 +174,12 @@ const googleChances = async (userQuery) => {
         if (!userQuery) {
             return "0%"
         }
-        const response = await openai.chat.completions.create({
+        const response = await openai_second.chat.completions.create({
             messages: [
                 {
                     role: "system",
                     content:
-                        "You get user query. You should analyze it and should provide the user with percentages of that if their question is realtime question or not where 0% is no need for realtime data and you can answer yourself and 100% is the need for realtime data and you can't answer yourself without Google information. You should return only the percentage number as a string in format: 42%"
+                        "You get user query. You should analyze it and should provide the user with percentages of that if their question is realtime question or not where 0% is no need for realtime data and you can answer yourself (such as describe image or read user code or request for write some poem or block of code) and 100% is the need for realtime data and you can't answer yourself without Google information. You should return only the percentage number as a string in format: 42%"
                 },
                 {
                     role: "user",
@@ -199,7 +204,9 @@ async function getPercentage(userQuery) {
 }
 
 function convertToInteger(str) {
-    return parseInt(str.replace("%", "").trim(), 10)
+    if (str) {
+        return parseInt(str.replace("%", "").trim(), 10)
+    }
 }
 
 module.exports = {
