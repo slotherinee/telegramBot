@@ -1,8 +1,7 @@
 const fs = require("fs/promises")
 const ChatHistory = require("./mongodbModel")
 const OpenAI = require("openai")
-const { sanitizeMarkdown } = require("telegram-markdown-sanitizer")
-const { processSplitText } = require("./utils")
+const { processSplitText, safeMarkdown } = require("./utils")
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -69,10 +68,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         if (data instanceof Error) {
             throw new Error(data.message)
         }
-        const response = sanitizeMarkdown(data)
-            .replace(/\\/g, "")
-            .replace(/^\*(?=\s)/gm, "•")
-            .replace(/\*\*(?=\S)(.*?)(?<=\S)\*\*/g, "*$1*")
+        const response = safeMarkdown(data)
         chat.messages.push({ role: "assistant", content: response })
         const chunks = processSplitText(response, 4096)
 
@@ -109,6 +105,10 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     } catch (error) {
         console.log(error)
         ctx.reply("Не удалось сгенерировать ответ! Попробуйте еще раз. 😔")
+        await ctx.telegram.deleteMessage(
+            ctx.chat.id,
+            loadingMessageToUser.message_id
+        )
     }
 }
 

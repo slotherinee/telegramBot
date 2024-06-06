@@ -9,11 +9,11 @@ const { v4: uuidv4 } = require("uuid")
 const {
     generateTextFromImage,
     processVoiceMessage,
-    processSplitText
+    processSplitText,
+    safeMarkdown
 } = require("./utils")
 const ChatHistory = require("./mongodbModel")
 const { chatGPT, GPT4 } = require("./GPT-4")
-const { sanitizeMarkdown } = require("telegram-markdown-sanitizer")
 
 if (!process.env.TELEGRAM_TOKEN)
     throw new Error('"BOT_TOKEN" env var is required!')
@@ -55,11 +55,12 @@ bot.command("clear", async (ctx) => {
 })
 
 bot.on(message("text"), async (ctx) => {
+    let loadingMessageToUser
     try {
         if (!ctx.message.text) {
             ctx.reply("Пожалуйста, отправьте текстовое сообщение!")
         }
-        const loadingMessageToUser = await ctx.reply("Генерирую...🙂")
+        loadingMessageToUser = await ctx.reply("Генерирую...🙂")
         const command = `${ctx.message.text.split(" ")[0]}`
         if (command in commandToModelData) {
             await generateModel(
@@ -73,6 +74,12 @@ bot.on(message("text"), async (ctx) => {
     } catch (error) {
         console.error("Error handling message:", error)
         ctx.reply("Произошла ошибка при обработке запроса. 😔")
+        if (loadingMessageToUser) {
+            await ctx.telegram.deleteMessage(
+                ctx.chat.id,
+                loadingMessageToUser.message_id
+            )
+        }
     }
 })
 
@@ -274,10 +281,7 @@ bot.on("voice", async (ctx) => {
         if (data instanceof Error) {
             throw new Error(data.message)
         }
-        const response = sanitizeMarkdown(data)
-            .replace(/\\/g, "")
-            .replace(/^\*(?=\s)/gm, "•")
-            .replace(/\*\*(?=\S)(.*?)(?<=\S)\*\*/g, "*$1*")
+        const response = safeMarkdown(data)
         chat.messages.push({ role: "assistant", content: response })
         const chunks = processSplitText(response, 4096)
 

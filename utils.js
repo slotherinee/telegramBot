@@ -38,7 +38,7 @@ async function processImage(buffer, ctx, loadingMessageToUser) {
     await fs.writeFile(imagePath, buffer)
 
     await sharp(buffer, { density: 300 })
-        .resize(1024, 1024, {
+        .resize(512, 512, {
             kernel: sharp.kernel.lanczos3,
             interpolator: sharp.interpolators.nohalo
         })
@@ -98,11 +98,20 @@ const processSplitText = (text, maxLength) => {
     return chunks
 }
 
+function safeMarkdown(string) {
+    return string
+        .replace(/\*/g, "")
+        .split("\n")
+        .map((line) => line.trim())
+        .join("\n")
+}
+
 module.exports = {
     convertFromBase64ToImage,
     convertFromBlobToImage,
     generateTextFromImage,
     processModel,
     processVoiceMessage,
-    processSplitText
+    processSplitText,
+    safeMarkdown
 }
