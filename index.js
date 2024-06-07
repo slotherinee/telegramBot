@@ -6,6 +6,7 @@ const { message } = require("telegraf/filters")
 const generateModel = require("./generateModels")
 const commandToModelData = require("./commands")
 const { v4: uuidv4 } = require("uuid")
+const googleIt = require("google-it")
 const {
     generateTextFromImage,
     processVoiceMessage,
@@ -13,7 +14,7 @@ const {
     safeMarkdown
 } = require("./utils")
 const ChatHistory = require("./mongodbModel")
-const { chatGPT, GPT4 } = require("./GPT-4")
+const { chatGPT, GPT4, getPercentage } = require("./GPT-4")
 
 if (!process.env.TELEGRAM_TOKEN)
     throw new Error('"BOT_TOKEN" env var is required!')
@@ -34,16 +35,16 @@ connectToDB()
 bot.start((ctx) => {
     ctx.reply(
         "*Привет!* 👋\n\n" +
-            "Напиши мне что-нибудь и я постараюсь помочь! 😊\n\n" +
-            "Также можешь отправить мне *голосовое сообщение* или *изображение*. Я попробую его понять и помочь с вашим вопросом 😉\n\n" +
-            "Или используй команды: \n" +
-            "/pg, /dalle, /prodia, /xlprodia, /xxlprodia,\n" +
-            "/emi, /diffusion, /real, /render /journey,\n" +
-            "/cyber, /pixelart, /anime, /anima для генерации картинок!\n\n" +
-            "*Пример:*\n" +
-            "*/pg spider-man*\n\n" +
-            "Подобным запросом ты сгенерируешь фото человека паука!🕸 ️\n\n" +
-            "Хочу заметить, что нейросеть лучше понимает запросы на генерации изображений на *английском языке*.",
+        "Напиши мне что-нибудь и я постараюсь помочь! 😊\n\n" +
+        "Также можешь отправить мне *голосовое сообщение* или *изображение*. Я попробую его понять и помочь с вашим вопросом 😉\n\n" +
+        "Или используй команды: \n" +
+        "/pg, /dalle, /prodia, /xlprodia, /xxlprodia,\n" +
+        "/emi, /diffusion, /real, /render /journey,\n" +
+        "/cyber, /pixelart, /anime, /anima для генерации картинок!\n\n" +
+        "*Пример:*\n" +
+        "*/pg spider-man*\n\n" +
+        "Подобным запросом ты сгенерируешь фото человека паука!🕸 ️\n\n" +
+        "Хочу заметить, что нейросеть лучше понимает запросы на генерации изображений на *английском языке*.",
         { parse_mode: "Markdown" }
     )
 })
@@ -274,7 +275,23 @@ bot.on("voice", async (ctx) => {
     try {
         const voiceResponse = await processVoiceMessage(fileName)
         const gotVoiceResponse = await ctx.reply("Генерирую ответ...🙂")
-        chat.messages.push({ role: "user", content: voiceResponse })
+        const { chances } = await getPercentage(voiceResponse)
+        const googleResult =
+            chances > 75
+                ? await googleIt({
+                    query: voiceResponse,
+                    'no-display': true,
+                })
+                : ""
+        chat.messages.push({
+            role: "user", content: googleResult !== ""
+                ? voiceResponse +
+                ". " +
+                "\n\n" +
+                "Google search results: " +
+                JSON.stringify(googleResult)
+                : voiceResponse
+        })
         await chat.save()
 
         const data = await GPT4(chat.messages)

@@ -17,8 +17,8 @@ const modelsData = [
             guidance_scale: 6,
             negative_prompt: "",
             num_inference_steps: 25,
-            height: 512,
-            width: 512,
+            height: 1024,
+            width: 1024,
             style: "natural"
         }
     },
@@ -45,8 +45,8 @@ const modelsData = [
             prompt_negative: "",
             guidance_scale: 7.5,
             image_style: "Photographic",
-            height: 512,
-            width: 512
+            height: 1024,
+            width: 1024
         }
     },
     {
@@ -57,8 +57,8 @@ const modelsData = [
             model: "absolutereality_v181.safetensors [3d9d4d2b]",
             sampling_method: "DPM++ 2M Karras",
             sampling_steps: 25,
-            width: 512,
-            height: 512,
+            width: 1024,
+            height: 1024,
             cfg_scale: 7
         }
     },
@@ -70,8 +70,8 @@ const modelsData = [
             model: "cyberrealistic_v33.safetensors [82b0d085]",
             sampling_method: "DPM++ 2M Karras",
             sampling_steps: 25,
-            width: 512,
-            height: 512,
+            width: 1024,
+            height: 1024,
             cfg_scale: 7
         }
     },
@@ -94,8 +94,8 @@ const modelsData = [
             negative_prompt: "",
             sampler: "DPM++ 2M Karras",
             steps: 25,
-            height: 512,
-            width: 512
+            height: 1024,
+            width: 1024
         }
     },
     {
@@ -134,8 +134,8 @@ const modelsData = [
             negative_prompt: "3d render, realistic",
             num_inference_steps: 8,
             guidance_scale: 1.5,
-            height: 512,
-            width: 512
+            height: 1024,
+            width: 1024
         }
     },
     {
@@ -146,8 +146,8 @@ const modelsData = [
                 "lowres, text, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
             guidance_scale: 7,
             num_inference_steps: 28,
-            width: 512,
-            height: 512
+            width: 1024,
+            height: 1024
         }
     },
     {
@@ -156,8 +156,8 @@ const modelsData = [
         optionalData: {
             guidance_scale: 3,
             prompt_negative: "",
-            width: 512,
-            height: 512
+            width: 1024,
+            height: 1024
         }
     }
 ]

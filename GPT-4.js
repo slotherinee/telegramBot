@@ -44,9 +44,9 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
         const googleResult =
             chances > 75
                 ? await googleIt({
-                      "no-display": true,
-                      query: userMessage
-                  })
+                    "no-display": true,
+                    query: userMessage
+                })
                 : ""
 
         if (imageFilePaths.length === 0) {
@@ -55,10 +55,10 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
                 content:
                     googleResult !== ""
                         ? userMessage +
-                          ". " +
-                          "\n\n" +
-                          "Google search results: " +
-                          JSON.stringify(googleResult)
+                        ". " +
+                        "\n\n" +
+                        "Google search results: " +
+                        JSON.stringify(googleResult)
                         : userMessage
             })
         } else {
@@ -145,7 +145,7 @@ async function GPT4(messages) {
                 {
                     role: "system",
                     content: `You are a GPT-4 made by OpenAI, helpful telegram chat-bot assistant. Make sure your response will be helpful and informative. Speak with user the language he speaks with you.  If you are not sure about the answer, you can ask the user for more information.
-                    Also you sometimes can get Google search results with users message which would start like "Google search results:", you should analyze both users and google search results and answer user question, you dont need to just copy paste the google search results, you should analyze it and provide the user with the most relevant information based on that information.
+                    Also you sometimes can get Google search results with users message which would start like "Google search results:", you should analyze both users and google search results and answer user question, you dont need to just copy paste the google search results, you should analyze it and provide the user with the most relevant information based on that information. You can also don't include google information in your response to user if you feel like you can 100% answer yourself. You can also sometimes provide to user hyperlinks to the google search results if you think that would be helpful for user.
                     Additional info: today is ${new Date()} and current time is ${new Date().toLocaleTimeString()}`
                 },
                 ...messages
@@ -179,7 +179,7 @@ const googleChances = async (userQuery) => {
                 {
                     role: "system",
                     content:
-                        "You get user query. You should analyze it and should provide the user with percentages of that if their question is realtime question or not where 0% is no need for realtime data and you can answer yourself (such as describe image or read user code or request for write some poem or block of code) and 100% is the need for realtime data and you can't answer yourself without Google information. You should return only the percentage number as a string in format: 42%"
+                        "You get user query. You should analyze it and should provide the user with percentages of that if their question is realtime question that should be googled (you would not answer user's question without Google if you had to) or not where 0% is no need for realtime data and you can answer yourself (such as who are you, describe image, read user code, request for write some poem, block of code or if you feel that user query is additional question about the question you already told everything about and etc.) and 100% is the need for realtime data and you can't answer yourself without Google information. You should return only the percentage number as a string in format: 42%"
                 },
                 {
                     role: "user",
@@ -212,5 +212,6 @@ function convertToInteger(str) {
 module.exports = {
     chatGPT,
     GPT4,
-    googleChances
+    googleChances,
+    getPercentage
 }

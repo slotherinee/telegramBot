@@ -38,10 +38,13 @@ async function processImage(buffer, ctx, loadingMessageToUser) {
     await fs.writeFile(imagePath, buffer)
 
     await sharp(buffer, { density: 300 })
-        .resize(512, 512, {
+        .resize(1024, 1024, {
             kernel: sharp.kernel.lanczos3,
-            interpolator: sharp.interpolators.nohalo
+            interpolator: sharp.interpolators.nohalo,
+            withoutEnlargement: true
         })
+        .sharpen()
+        .toFormat("jpeg", { quality: 90 })
         .toFile(imagePath, { force: true })
 
     await ctx.replyWithPhoto(
@@ -49,10 +52,10 @@ async function processImage(buffer, ctx, loadingMessageToUser) {
         {
             caption: ctx.message.text
                 ? ctx.message.text
-                      .split(" ")
-                      .slice(1)
-                      .join(" ")
-                      .replace(/^\/[^ ]+/, "")
+                    .split(" ")
+                    .slice(1)
+                    .join(" ")
+                    .replace(/^\/[^ ]+/, "")
                 : ""
         }
     )
