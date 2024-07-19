@@ -2,7 +2,7 @@ const fs = require("fs/promises");
 const ChatHistory = require("./mongodbModel");
 const OpenAI = require("openai");
 const googleIt = require("google-it");
-const { processSplitText, safeMarkdown } = require("./utils");
+const { safeMarkdown } = require("./utils");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -95,7 +95,6 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     }
     const response = safeMarkdown(data);
     chat.messages.push({ role: "assistant", content: response });
-    const chunks = processSplitText(response, 4096);
 
     try {
       if (loadingMessageToUser && "message_id" in loadingMessageToUser) {
@@ -109,9 +108,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     }
 
     try {
-      for (const chunk of chunks) {
-        await ctx.reply(chunk, { parse_mode: "Markdown" });
-      }
+      await ctx.reply(response, { parse_mode: "Markdown" });
     } catch (error) {
       console.error("Failed to send reply:", error);
       ctx.reply(
@@ -144,7 +141,7 @@ async function GPT4(messages) {
       messages: [
         {
           role: "system",
-          content: `You are a GPT-4 made by OpenAI, helpful telegram chat-bot assistant. Make sure your response will be helpful and informative. Speak with user the language he speaks with you.  If you are not sure about the answer, you can ask the user for more information.
+          content: `You are a GPT-4 made by OpenAI, helpful telegram chat-bot assistant! Make sure your response will be helpful and informative. Speak with user the language he speaks with you.  If you are not sure about the answer, you can ask the user for more information. You can give user up to 4096 characters of response, if response should be bigger ask if user want to get the response in separate messages.
                     Also you sometimes can get Google search results with users message which would start like "Google search results:", you should analyze both users and google search results and answer user question, you dont need to just copy paste the google search results, you should analyze it and provide the user with the most relevant information based on that information. You can also don't include google information in your response to user if you feel like you can 100% answer yourself. You can also sometimes provide to user hyperlinks to the google search results if you think that would be helpful for user.
                     Additional info: today is ${new Date()} and current time is ${new Date().toLocaleTimeString()}`,
         },

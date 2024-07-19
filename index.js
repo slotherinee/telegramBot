@@ -10,7 +10,6 @@ const googleIt = require("google-it");
 const {
   generateTextFromImage,
   processVoiceMessage,
-  processSplitText,
   safeMarkdown,
 } = require("./utils");
 const ChatHistory = require("./mongodbModel");
@@ -317,14 +316,11 @@ bot.on("voice", async (ctx) => {
     }
     const response = safeMarkdown(data);
     chat.messages.push({ role: "assistant", content: response });
-    const chunks = processSplitText(response, 4096);
 
     ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id);
     ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id);
 
-    for (const chunk of chunks) {
-      await ctx.reply(chunk, { parse_mode: "Markdown" });
-    }
+    await ctx.reply(response, { parse_mode: "Markdown" });
     await chat.save();
   } catch (err) {
     console.log(err);
