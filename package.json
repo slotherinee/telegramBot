@@ -17,6 +17,8 @@
         "dotenv": "^16.4.1",
         "google-it": "^1.6.4",
         "gpti": "^2.0.6",
+        "lodash": "^4.17.21",
+        "markdown-to-txt": "^2.0.1",
         "mongoose": "^8.3.1",
         "nodemon": "^3.1.0",
         "openai": "^4.41.1",

@@ -7,13 +7,10 @@ const generateModel = require("./generateModels");
 const commandToModelData = require("./commands");
 const { v4: uuidv4 } = require("uuid");
 const googleIt = require("google-it");
-const {
-  generateTextFromImage,
-  processVoiceMessage,
-  safeMarkdown,
-} = require("./utils");
+const { generateTextFromImage, processVoiceMessage } = require("./utils");
 const ChatHistory = require("./mongodbModel");
 const { chatGPT, GPT4, getPercentage } = require("./GPT-4");
+const { markdownToTxt } = require("markdown-to-txt");
 
 if (!process.env.TELEGRAM_TOKEN)
   throw new Error('"BOT_TOKEN" env var is required!');
@@ -314,13 +311,13 @@ bot.on("voice", async (ctx) => {
     if (data instanceof Error) {
       throw new Error(data.message);
     }
-    const response = safeMarkdown(data);
+    const response = markdownToTxt(data);
     chat.messages.push({ role: "assistant", content: response });
 
     ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id);
     ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id);
 
-    await ctx.reply(response, { parse_mode: "Markdown" });
+    await ctx.reply(response);
     await chat.save();
   } catch (err) {
     console.log(err);
