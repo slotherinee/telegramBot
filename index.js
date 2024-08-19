@@ -7,7 +7,11 @@ const generateModel = require("./generateModels");
 const commandToModelData = require("./commands");
 const { v4: uuidv4 } = require("uuid");
 const googleIt = require("google-it");
-const { generateTextFromImage, processVoiceMessage } = require("./utils");
+const {
+  generateTextFromImage,
+  processVoiceMessage,
+  splitMessage,
+} = require("./utils");
 const ChatHistory = require("./mongodbModel");
 const { chatGPT, GPT4, getPercentage } = require("./GPT-4");
 const { markdownToTxt } = require("markdown-to-txt");
@@ -317,7 +321,14 @@ bot.on("voice", async (ctx) => {
     ctx.telegram.deleteMessage(ctx.chat.id, loadingMessageToUser.message_id);
     ctx.telegram.deleteMessage(ctx.chat.id, gotVoiceResponse.message_id);
 
-    await ctx.reply(response);
+    if (response.length > 4096) {
+      const chunks = splitMessage(response);
+      for (const chunk of chunks) {
+        await ctx.reply(chunk);
+      }
+    } else {
+      await ctx.reply(response);
+    }
     await chat.save();
   } catch (err) {
     console.log(err);

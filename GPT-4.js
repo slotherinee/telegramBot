@@ -2,7 +2,7 @@ const fs = require("fs/promises");
 const ChatHistory = require("./mongodbModel");
 const OpenAI = require("openai");
 const googleIt = require("google-it");
-const { safeMarkdown } = require("./utils");
+const { splitMessage } = require("./utils");
 const { markdownToTxt } = require("markdown-to-txt");
 
 const openai = new OpenAI({
@@ -95,7 +95,6 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       throw new Error(data.message);
     }
     const response = markdownToTxt(data);
-    console.log("response", response);
 
     chat.messages.push({ role: "assistant", content: response });
 
@@ -111,7 +110,14 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     }
 
     try {
-      await ctx.reply(response);
+      if (response.length > 4096) {
+        const chunks = splitMessage(response);
+        for (const chunk of chunks) {
+          await ctx.reply(chunk);
+        }
+      } else {
+        await ctx.reply(response);
+      }
     } catch (error) {
       console.error("Failed to send reply:", error);
       ctx.reply(

@@ -90,13 +90,16 @@ const processVoiceMessage = async (fileName) => {
   return response.text;
 };
 
-function safeMarkdown(string) {
-  return string
-    .replace(/\*/g, "")
-    .split("\n")
-    .map((line) => line.trim())
-    .join("\n");
-}
+const splitMessage = (message) => {
+  const maxLength = 4096;
+  const chunks = [];
+
+  for (let i = 0; i < message.length; i += maxLength) {
+    chunks.push(message.substring(i, i + maxLength));
+  }
+
+  return chunks;
+};
 
 module.exports = {
   convertFromBase64ToImage,
@@ -104,5 +107,5 @@ module.exports = {
   generateTextFromImage,
   processModel,
   processVoiceMessage,
-  safeMarkdown,
+  splitMessage,
 };
