@@ -87,6 +87,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     } catch (error) {
       console.error("Failed to save chat:", error);
       ctx.reply("An error occurred while saving the chat. Please try again.");
+      ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
       return;
     }
 
@@ -107,6 +108,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       }
     } catch (error) {
       console.error("Failed to delete message:", error);
+      ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
     }
 
     try {
@@ -123,6 +125,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       ctx.reply(
         "Не удалось сгенерировать ответ! Попробуйте очистить контекст и повторить ваш запрос еще раз. 😔"
       );
+      ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
     }
 
     try {
@@ -130,6 +133,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
     } catch (error) {
       console.error("Failed to save chat:", error);
       ctx.reply("An error occurred while saving the chat. Please try again.");
+      ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
     }
   } catch (error) {
     console.log(error);
@@ -140,6 +144,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       ctx.chat.id,
       loadingMessageToUser.message_id
     );
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 }
 
@@ -172,6 +177,7 @@ async function GPT4(messages) {
     throw new Error(
       "Не удалось сгенерировать ответ! Попробуйте очистить контекст и повторите ваш запрос еще раз. 😔"
     );
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 }
 
@@ -197,6 +203,7 @@ const googleChances = async (userQuery) => {
     return response?.choices[0]?.message?.content;
   } catch (err) {
     console.log("Google error", err);
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
   }
 };
 

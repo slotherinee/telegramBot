@@ -28,6 +28,7 @@ const connectToDB = async () => {
     console.log("Connected to MongoDB");
   } catch (error) {
     console.log("Error connecting to MongoDB:", error);
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 };
 connectToDB();
@@ -103,6 +104,7 @@ bot.on(message("text"), async (ctx) => {
         loadingMessageToUser.message_id
       );
     }
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 });
 
@@ -139,6 +141,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             ctx.reply(
               "An error occurred while getting the file link. Please try again."
             );
+            ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
             return;
           }
 
@@ -155,6 +158,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             ctx.reply(
               "An error occurred while writing the file. Please try again."
             );
+            ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
             return;
           }
 
@@ -188,6 +192,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             await fs.unlink(imageFilePath);
           } catch (error) {
             console.error("Failed to delete file:", error);
+            ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
           }
         }
       }, 500);
@@ -200,6 +205,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         ctx.reply(
           "An error occurred while getting the file link. Please try again."
         );
+        ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
         return;
       }
 
@@ -216,6 +222,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         ctx.reply(
           "An error occurred while writing the file. Please try again."
         );
+        ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
         return;
       }
 
@@ -243,11 +250,13 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         await fs.unlink(inputFileName);
       } catch (error) {
         console.error("Failed to delete file:", error);
+        ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
       }
     }
   } catch (error) {
     console.log(error);
     ctx.reply("Произошла ошибка при обработке запроса. 😔");
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 };
 
@@ -333,6 +342,7 @@ bot.on("voice", async (ctx) => {
   } catch (err) {
     console.log(err);
     ctx.reply("Произошла ошибка при обработке голосового сообщения. 😔");
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
   } finally {
     if (fileName) {
       await fs.unlink(fileName);
@@ -343,6 +353,7 @@ bot.on("voice", async (ctx) => {
 bot.catch((err, ctx) => {
   console.error("Ошибка:", err);
   ctx.reply("Произошла ошибка при обработке запроса. 😔");
+  ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
 });
 
 try {
@@ -350,6 +361,7 @@ try {
   console.log("Bot launched successfully");
 } catch (error) {
   console.log(error);
+  ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
 }
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
