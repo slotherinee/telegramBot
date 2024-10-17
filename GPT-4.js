@@ -177,7 +177,6 @@ async function GPT4(messages) {
     throw new Error(
       "Не удалось сгенерировать ответ! Попробуйте очистить контекст и повторите ваш запрос еще раз. 😔"
     );
-    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
 }
 
@@ -203,7 +202,6 @@ const googleChances = async (userQuery) => {
     return response?.choices[0]?.message?.content;
   } catch (err) {
     console.log("Google error", err);
-    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
   }
 };
 
