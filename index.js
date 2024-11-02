@@ -99,7 +99,8 @@ bot.on(message("text"), async (ctx) => {
       await chatGPT(ctx, loadingMessageToUser);
     }
   } catch (error) {
-    console.error("Error handling message:", error);
+    try {
+      console.error("Error handling message:", error);
     ctx.reply("Произошла ошибка при обработке запроса. 😔");
     if (loadingMessageToUser) {
       await ctx.telegram.deleteMessage(
@@ -108,6 +109,7 @@ bot.on(message("text"), async (ctx) => {
       );
     }
     ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
+    } catch(e) {}
   }
  } catch (e) {}
 });
@@ -258,9 +260,11 @@ const handleMedia = async (ctx, generateTextFromImage) => {
       }
     }
   } catch (error) {
-    console.log(error);
+    try {
+      console.log(error);
     ctx.reply("Произошла ошибка при обработке запроса. 😔");
     ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
+    } catch (e) {}
   }
 };
 
