@@ -61,6 +61,7 @@ bot.command("clear", async (ctx) => {
 const rateLimitMap = new Map();
 
 bot.on(message("text"), async (ctx) => {
+ try {
   const userId = ctx.chat.id;
   const currentTime = Date.now();
   const requestLimit = 5;
@@ -108,6 +109,7 @@ bot.on(message("text"), async (ctx) => {
     }
     ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
   }
+ } catch (e) {}
 });
 
 const mediaGroupStore = new Map();
@@ -263,15 +265,20 @@ const handleMedia = async (ctx, generateTextFromImage) => {
 };
 
 bot.on(message("sticker"), async (ctx) => {
-  ctx.reply("Извините, я не говорю на языке стикеров! 😔");
+  try {
+    ctx.reply("Извините, я не говорю на языке стикеров! 😔");
+  } catch (e) {}
 });
 
 bot.on("photo", async (ctx) => {
-  await handleMedia(ctx, generateTextFromImage);
+  try {
+    await handleMedia(ctx, generateTextFromImage);
+  } catch (e) {}
 });
 
 bot.on("voice", async (ctx) => {
-  const chatId = ctx.chat.id;
+  try {
+    const chatId = ctx.chat.id;
   const username =
     ctx.message.from.username || ctx.message.from.first_name || "no username";
 
@@ -350,12 +357,15 @@ bot.on("voice", async (ctx) => {
       await fs.unlink(fileName);
     }
   }
+  } catch (e) {}
 });
 
 bot.catch((err, ctx) => {
-  console.error("Ошибка:", err);
-  ctx.reply("Произошла ошибка при обработке запроса. 😔");
-  ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
+  try {
+    console.error("Ошибка:", err);
+    ctx.reply("Произошла ошибка при обработке запроса. 😔");
+    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
+  } catch (e) {}
 });
 
 try {
