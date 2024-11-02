@@ -53,9 +53,11 @@ bot.start(async (ctx) => {
 });
 
 bot.command("clear", async (ctx) => {
-  const chatId = ctx.chat.id;
+  try {
+    const chatId = ctx.chat.id;
   await ChatHistory.findOneAndUpdate({ chatId }, { messages: [] });
   await ctx.reply("Контекст очищен! 🧹");
+  } catch (e) {}
 });
 
 const rateLimitMap = new Map();
