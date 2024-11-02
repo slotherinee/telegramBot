@@ -87,7 +87,9 @@ bot.on(message("text"), async (ctx) => {
     if (!ctx.message.text) {
       ctx.reply("Пожалуйста, отправьте текстовое сообщение!");
     }
-    loadingMessageToUser = await ctx.reply("Генерирую...🙂");
+    try {
+      loadingMessageToUser = await ctx.reply("Генерирую...🙂");
+    } catch(e) {}
     const command = `${ctx.message.text.split(" ")[0]}`;
     if (command in commandToModelData) {
       await generateModel(
