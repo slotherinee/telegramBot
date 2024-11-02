@@ -9,7 +9,7 @@ const generateModel = async (
 ) => {
   const modelFnCallback = async (err, data) => {
     if (err != null) {
-      ctx.reply("Не удалось сгенерировать изображение! Ошибка сервера! 😔");
+      await ctx.reply("Не удалось сгенерировать изображение! Ошибка сервера! 😔");
       await ctx.telegram.deleteMessage(
         ctx.chat.id,
         loadingMessageToUser.message_id
@@ -18,7 +18,7 @@ const generateModel = async (
       try {
         await processModel(data, ctx, loadingMessageToUser);
       } catch (err) {
-        ctx.reply(
+        await ctx.reply(
           "Не удалось сгенерировать изображение! Произошла ошибка преобразования картинки! 😔"
         );
         await ctx.telegram.deleteMessage(
@@ -41,7 +41,7 @@ const generateModel = async (
       return;
     }
     if (!ctx.message?.caption?.replace(modelsData.name, "").trim()) {
-      ctx.reply(
+     await ctx.reply(
         `Нужен текст после ${modelsData.name}, не оставляй запрос пустым. 😔 `
       );
       await ctx.telegram.deleteMessage(
@@ -59,7 +59,7 @@ const generateModel = async (
     );
   } else if (ctx.message.text) {
     if (!ctx.message.text.replace(modelsData.name, "").trim()) {
-      ctx.reply(
+     await ctx.reply(
         `Нужен текст после ${modelsData.name}, не оставляй запрос пустым. 😔 `
       );
       await ctx.telegram.deleteMessage(

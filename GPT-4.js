@@ -86,7 +86,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       await chat.save();
     } catch (error) {
       console.error("Failed to save chat:", error);
-      ctx.reply("An error occurred while saving the chat. Please try again.");
+      await ctx.reply("An error occurred while saving the chat. Please try again.");
       ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
       return;
     }
@@ -122,7 +122,7 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       }
     } catch (error) {
       console.error("Failed to send reply:", error);
-      ctx.reply(
+     await ctx.reply(
         "Не удалось сгенерировать ответ! Попробуйте очистить контекст и повторить ваш запрос еще раз. 😔"
       );
       ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
@@ -132,12 +132,12 @@ async function chatGPT(ctx, loadingMessageToUser, imageFilePaths = []) {
       await chat.save();
     } catch (error) {
       console.error("Failed to save chat:", error);
-      ctx.reply("An error occurred while saving the chat. Please try again.");
+     await ctx.reply("An error occurred while saving the chat. Please try again.");
       ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
     }
   } catch (error) {
     console.log(error);
-    ctx.reply(
+    await ctx.reply(
       "Не удалось сгенерировать ответ! Попробуйте очистить контекст и повторить ваш запрос еще раз. 😔"
     );
     await ctx.telegram.deleteMessage(

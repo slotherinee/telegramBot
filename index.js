@@ -33,9 +33,9 @@ const connectToDB = async () => {
 };
 connectToDB();
 
-bot.start((ctx) => {
+bot.start(async (ctx) => {
   try {
-    ctx.reply(
+    await ctx.reply(
       "*Привет!* 👋\n\n" +
         "Напиши мне что-нибудь и я постараюсь помочь! 😊\n\n" +
         "Также можешь отправить мне *голосовое сообщение* или *изображение*. Я попробую его понять и помочь с вашим вопросом 😉\n\n" +
@@ -55,7 +55,7 @@ bot.start((ctx) => {
 bot.command("clear", async (ctx) => {
   const chatId = ctx.chat.id;
   await ChatHistory.findOneAndUpdate({ chatId }, { messages: [] });
-  ctx.reply("Контекст очищен! 🧹");
+  await ctx.reply("Контекст очищен! 🧹");
 });
 
 const rateLimitMap = new Map();
@@ -73,7 +73,7 @@ bot.on(message("text"), async (ctx) => {
       const userData = rateLimitMap.get(userId);
       if (currentTime - userData.timestamp < timeWindow) {
         if (userData.count >= requestLimit) {
-          return ctx.reply("Пожалуйста, подождите минуту и повторите снова.");
+          return await ctx.reply("Пожалуйста, подождите минуту и повторите снова.");
         }
         userData.count += 1;
       } else {
@@ -85,7 +85,7 @@ bot.on(message("text"), async (ctx) => {
     }
 
     if (!ctx.message.text) {
-      ctx.reply("Пожалуйста, отправьте текстовое сообщение!");
+      await ctx.reply("Пожалуйста, отправьте текстовое сообщение!");
     }
     try {
       loadingMessageToUser = await ctx.reply("Генерирую...🙂");
@@ -103,7 +103,7 @@ bot.on(message("text"), async (ctx) => {
   } catch (error) {
     try {
       console.error("Error handling message:", error);
-    ctx.reply("Произошла ошибка при обработке запроса. 😔");
+   await ctx.reply("Произошла ошибка при обработке запроса. 😔");
     if (loadingMessageToUser) {
       await ctx.telegram.deleteMessage(
         ctx.chat.id,
@@ -146,7 +146,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             fileLink = await bot.telegram.getFileLink(fileId);
           } catch (error) {
             console.error("Failed to get file link:", error);
-            ctx.reply(
+           await ctx.reply(
               "An error occurred while getting the file link. Please try again."
             );
             ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
@@ -163,7 +163,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
             await fs.writeFile(inputFileName, new Uint8Array(photoData));
           } catch (error) {
             console.error("Failed to write file:", error);
-            ctx.reply(
+           await ctx.reply(
               "An error occurred while writing the file. Please try again."
             );
             ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
@@ -210,7 +210,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         fileLink = await bot.telegram.getFileLink(fileId);
       } catch (error) {
         console.error("Failed to get file link:", error);
-        ctx.reply(
+      await ctx.reply(
           "An error occurred while getting the file link. Please try again."
         );
         ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
@@ -227,7 +227,7 @@ const handleMedia = async (ctx, generateTextFromImage) => {
         await fs.writeFile(inputFileName, new Uint8Array(photoData));
       } catch (error) {
         console.error("Failed to write file:", error);
-        ctx.reply(
+        await ctx.reply(
           "An error occurred while writing the file. Please try again."
         );
         ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
@@ -264,15 +264,15 @@ const handleMedia = async (ctx, generateTextFromImage) => {
   } catch (error) {
     try {
       console.log(error);
-    ctx.reply("Произошла ошибка при обработке запроса. 😔");
-    ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
+    await ctx.reply("Произошла ошибка при обработке запроса. 😔");
+    await ctx.telegram.sendMessage(process.env.ADMIN_ID, `${error}`);
     } catch (e) {}
   }
 };
 
 bot.on(message("sticker"), async (ctx) => {
   try {
-    ctx.reply("Извините, я не говорю на языке стикеров! 😔");
+    await ctx.reply("Извините, я не говорю на языке стикеров! 😔");
   } catch (e) {}
 });
 
@@ -356,7 +356,7 @@ bot.on("voice", async (ctx) => {
     await chat.save();
   } catch (err) {
     console.log(err);
-    ctx.reply("Произошла ошибка при обработке голосового сообщения. 😔");
+   await ctx.reply("Произошла ошибка при обработке голосового сообщения. 😔");
     ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
   } finally {
     if (fileName) {
@@ -366,10 +366,10 @@ bot.on("voice", async (ctx) => {
   } catch (e) {}
 });
 
-bot.catch((err, ctx) => {
+bot.catch(async (err, ctx) => {
   try {
     console.error("Ошибка:", err);
-    ctx.reply("Произошла ошибка при обработке запроса. 😔");
+    await ctx.reply("Произошла ошибка при обработке запроса. 😔");
     ctx.telegram.sendMessage(process.env.ADMIN_ID, `${err}`);
   } catch (e) {}
 });

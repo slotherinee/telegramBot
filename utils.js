@@ -73,7 +73,7 @@ const processModel = async (data, ctx, loadingMessageToUser) => {
   } else if (data instanceof Blob) {
     await convertFromBlobToImage(data, ctx, loadingMessageToUser);
   } else {
-    ctx.reply(
+    await ctx.reply(
       "Не удалось сгенерировать изображение! Ошибка при получении данных с сервера! 😔"
     );
   }
